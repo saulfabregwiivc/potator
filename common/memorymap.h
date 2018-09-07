@@ -4,7 +4,6 @@
 #include "supervision.h"
 
 void memorymap_init();
-void memorymap_done();
 void memorymap_reset();
 uint8  memorymap_registers_read(uint32 Addr);
 void memorymap_registers_write(uint32 Addr, uint8 Value);
@@ -17,12 +16,12 @@ uint8 *memorymap_getLowerRomBank(void);
 uint8 *memorymap_getRegisters(void);
 uint8 *memorymap_getRomPointer(void);
 
-extern uint8	*memorymap_programRom;
-extern uint8	*memorymap_lowerRam;
-extern uint8	*memorymap_upperRam;
-extern uint8	*memorymap_lowerRomBank;
-extern uint8	*memorymap_upperRomBank;
-extern uint8	*memorymap_regs;
+extern uint8 *memorymap_programRom;
+extern uint8 *memorymap_lowerRam;
+extern uint8 *memorymap_upperRam;
+extern uint8 *memorymap_lowerRomBank;
+extern uint8 *memorymap_upperRomBank;
+extern uint8 *memorymap_regs;
 
 #endif
 

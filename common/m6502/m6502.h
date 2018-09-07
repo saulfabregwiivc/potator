@@ -44,7 +44,7 @@ extern "C" {
 /** Simple Datatypes *****************************************/
 /** NOTICE: sizeof(byte)=1 and sizeof(word)=2               **/
 /*************************************************************/
-//typedef unsigned char byte;
+typedef unsigned char byte;
 typedef unsigned short word;
 typedef signed char offset;
 
