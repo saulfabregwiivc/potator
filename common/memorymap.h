@@ -3,6 +3,17 @@
 
 #include "supervision.h"
 
+enum
+{
+    XSIZE = 0x00,
+    XPOS  = 0x02,
+    YPOS  = 0x03,
+    BANK  = 0x26,
+};
+
+void memorymap_set_dma_finished();
+void memorymap_set_timer_shot();
+
 void memorymap_init();
 void memorymap_reset();
 uint8  memorymap_registers_read(uint32 Addr);

@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "controls.h"
 
 #ifdef GP2X
@@ -12,7 +10,7 @@
 #include <SDL/SDL.h>
 #endif
 
-uint8 controls_state;
+static uint8 controls_state;
 
 void controls_reset()
 {
@@ -21,15 +19,15 @@ void controls_reset()
 
 void controls_state_write(uint8 type, uint8 data)
 {
-     if(controls_state==data) 
-        return; 
+     if (controls_state == data)
+         return; 
      else 
-        controls_state = 0;
+         controls_state = 0;
      
-     if(type)
-       controls_state|=data;
+     if (type)
+         controls_state |= data;
      else
-       controls_state=data;
+         controls_state = data;
 }
 
 uint8 controls_read(uint32 addr)
@@ -53,8 +51,7 @@ BOOL controls_update(void)
     if (pad & GP2X_B)      controls_state|=0x20;
     if (pad & GP2X_START)  controls_state|=0x80;
     if (pad & GP2X_SELECT) controls_state|=0x40;
-#endif
-#ifdef NDS
+#elif NDS
     if (!(REG_KEYINPUT & KEY_RIGHT))  controls_state|=0x01;
     if (!(REG_KEYINPUT & KEY_LEFT))   controls_state|=0x02;
     if (!(REG_KEYINPUT & KEY_DOWN))   controls_state|=0x04;
@@ -63,8 +60,7 @@ BOOL controls_update(void)
     if (!(REG_KEYINPUT & KEY_B))      controls_state|=0x20;
     if (!(REG_KEYINPUT & KEY_SELECT)) controls_state|=0x40;
     if (!(REG_KEYINPUT & KEY_START))  controls_state|=0x80;
-#endif
-/*#ifdef _SDL_ 
+#elif _SDL_ 
     uint8 *keystate = SDL_GetKeyState(NULL);
 
     if (keystate[SDLK_RIGHT]) controls_state|=0x01;
@@ -75,8 +71,7 @@ BOOL controls_update(void)
     if (keystate[SDLK_c])     controls_state|=0x20;
     if (keystate[SDLK_F1])    controls_state|=0x40;
     if (keystate[SDLK_F2])    controls_state|=0x80;
-#endif*/
-#ifdef _SDL_    
+
     SDL_Event event;
 
     // Check for events

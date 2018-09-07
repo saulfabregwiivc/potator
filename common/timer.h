@@ -4,8 +4,7 @@
 #include "supervision.h"
 
 void timer_reset();
-void timer_write(uint32 addr, uint8 data);
-uint8 timer_read(uint32 addr);
+void timer_write(uint8 data);
 void timer_exec(uint32 cycles);
 
 #endif
