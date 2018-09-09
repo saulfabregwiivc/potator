@@ -62,13 +62,13 @@ the current code is */
 #define MC_Ax(Rg)       M_LDWORD(Rg);Rg.W+=R->X
 
 #define MC_Ay(Rg)       M_LDWORD(Rg);Rg.W+=R->Y
-//#define MC_Ix(Rg)       K.B.l=Op6502(R->PC.W++)+R->X;K.B.h=0; \
-//                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W)
-//#define MC_Iy(Rg)       K.B.l=Op6502(R->PC.W++);K.B.h=0; \
-//                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W); \
-//                        Rg.W+=R->Y
-//#define MC_Izp(Rg)      K.B.l=Op6502(R->PC.W++);K.B.h=0; \
-//                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W);
+/*#define MC_Ix(Rg)       K.B.l=Op6502(R->PC.W++)+R->X;K.B.h=0; \
+                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W)
+#define MC_Iy(Rg)       K.B.l=Op6502(R->PC.W++);K.B.h=0; \
+                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W); \
+                        Rg.W+=R->Y
+#define MC_Izp(Rg)      K.B.l=Op6502(R->PC.W++);K.B.h=0; \
+                        Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W);*/
 #define MC_Ix(Rg)       K.W=(byte)(Op6502(R->PC.W++)+R->X); \
 			Rg.B.l=Op6502(K.W++);Rg.B.h=Op6502(K.W)
 #define MC_Iy(Rg)       K.W=Op6502(R->PC.W++); \

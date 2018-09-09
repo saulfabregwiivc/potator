@@ -59,6 +59,8 @@ void supervision_reset(void)
     controls_reset();
 
     Reset6502(&m6502_registers);
+
+    irq = FALSE;
 }
 
 void supervision_done(void)
@@ -107,10 +109,10 @@ void supervision_exec(int16 *backbuffer, BOOL bRender)
             scan1 = 0; // SSSnake
     }
 
-    sound_decrement(); // MCFG_SCREEN_VBLANK_CALLBACK, svision.cpp
-
     if (Rd6502(0x2026)&0x01)
         Int6502(supervision_get6502regs(), INT_NMI);
+
+    sound_decrement(); // MCFG_SCREEN_VBLANK_CALLBACK, svision.cpp
 }
 
 void supervision_turnSound(BOOL bOn)

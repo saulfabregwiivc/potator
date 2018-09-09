@@ -13,7 +13,7 @@ uint8 *memorymap_regs;
 static uint32 memorymap_programRomSize;
 
 static BOOL dma_finished = FALSE;
-static BOOL timer_shot = FALSE;
+static BOOL timer_shot   = FALSE;
 
 static void check_irq(void)
 {
@@ -41,7 +41,6 @@ void memorymap_init(void)
     memorymap_lowerRam = (uint8*)malloc(0x2000);
     memorymap_upperRam = (uint8*)malloc(0x2000);
     memorymap_regs     = (uint8*)malloc(0x2000);
-
 }
 
 void memorymap_reset(void)
@@ -51,6 +50,9 @@ void memorymap_reset(void)
 
     memset(memorymap_lowerRam, 0x00, 0x2000);
     memset(memorymap_upperRam, 0x00, 0x2000);
+
+    dma_finished = FALSE;
+    timer_shot   = FALSE;
 }
 
 uint8 memorymap_registers_read(uint32 Addr)
@@ -104,7 +106,7 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
             timer_write(Value);
             break;
         case 0x26:
-            //printf( "memorymap: writing 0x%.2x to rom bank register\n", Value);
+            //printf("memorymap: writing 0x%.2x to rom bank register\n", Value);
             memorymap_lowerRomBank = memorymap_programRom + ((((uint32)Value) & 0x60) << 9);
             memorymap_upperRomBank = memorymap_programRom + (memorymap_programRomSize == 0x10000 ? 0xc000 : 0x4000);
             check_irq();
@@ -113,13 +115,11 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
         case 0x14: case 0x15: case 0x16: case 0x17:
             soundport_w(((Addr & 0x4) >> 2), Addr & 3, Value);
             break;
-            //sound_write(Addr&7, Value); break;
         case 0x28:
         case 0x29:
         case 0x2a:
             svision_noise_w(Addr & 0x07, Value);
             break;
-            //sound_noise_write(Addr&0x07, Value); break;
         case 0x18:
         case 0x19:
         case 0x1a:
@@ -127,7 +127,6 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
         case 0x1c:
             svision_sounddma_w(Addr & 0x07, Value);
             break;
-            //sound_audio_dma(Addr&0x07, Value); break;
     }
 }
 

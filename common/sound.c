@@ -45,10 +45,10 @@ void sound_stream_update(uint8 *stream, int len)
     int i, j;
     SVISION_CHANNEL *channel;
     short s;
-    unsigned short *left  = (unsigned short *)(stream + 0);
-    unsigned short *right = (unsigned short *)(stream + 1);
+    uint8 *left  = stream + 0;
+    uint8 *right = stream + 1;
 
-    for (i = 0; i < len >> 1; i++, left++, right++) {
+    for (i = 0; i < len >> 1; i++, left+=2, right+=2) {
         s = 0;
         *left = *right = 0;
 
@@ -71,7 +71,6 @@ void sound_stream_update(uint8 *stream, int len)
                             on = channel->pos <= (9 * channel->size) >> 5;
                             break;
                     }
-                    //s += on ? channel->volume<<8 : 0;
                     s = on ? channel->volume : 0; // << 8 : 0;
                     if (j == 0) {
                         *right += s;
@@ -117,9 +116,7 @@ void sound_stream_update(uint8 *stream, int len)
             unsigned char sample;
             unsigned short addr = m_dma.start + (unsigned)m_dma.pos / 2;
             if (addr >= 0x8000 && addr < 0xc000) {
-                //sample = Rd6502((addr & 0x3fff) | m_dma.ca14to16);
-                sample = memorymap_getLowerRomBank()[(addr & 0x3fff) | m_dma.ca14to16];
-                //sample = machine().root_device().memregion("user1")->base()[(addr & 0x3fff) | m_dma.ca14to16];
+                sample = memorymap_getRomPointer()[(addr & 0x3fff) | m_dma.ca14to16];
             }
             else {
                 sample = Rd6502(addr);
@@ -136,11 +133,9 @@ void sound_stream_update(uint8 *stream, int len)
                 *right += s;
             m_dma.pos += m_dma.step;
             if (m_dma.pos >= m_dma.size) {
-                //svision_state *sv_state = machine().driver_data<svision_state>();
                 m_dma.finished = TRUE;
                 m_dma.on = FALSE;
 
-                //printf("dma ");
                 memorymap_set_dma_finished();
             }
         }
