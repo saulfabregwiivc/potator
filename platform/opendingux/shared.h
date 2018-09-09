@@ -41,8 +41,6 @@ typedef int bool;
 #include "../../common/controls.h"
 #include "../../common/types.h"
 
-extern unsigned char controls_state;
-
 #define cartridge_IsLoaded() (strlen(gameName) != 0)
 
 typedef struct {
@@ -58,7 +56,7 @@ extern char gameName[MAX__PATH];
 extern unsigned int gameCRC;
 
 //typedef unsigned char byte;
-typedef unsigned short word;
+//typedef unsigned short word;
 typedef unsigned int uint;
 
 extern SDL_Surface* screen;						// Main program screen

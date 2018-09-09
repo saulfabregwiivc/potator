@@ -114,7 +114,7 @@ void gpu_write(uint32 addr, uint8 data)
 
 uint8 gpu_read(uint32 addr)
 {
-    return(gpu_regs[(addr&0x03)]);
+    return gpu_regs[(addr&0x03)];
 }
 
 void gpu_render_scanline(uint32 scanline, int16 *backbuffer)

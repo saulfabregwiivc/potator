@@ -34,8 +34,6 @@ currentConfig_t currentConfig;
 
 void loadROM(char* filename)
 {
-	u32 length;
-
 	if (buffer != 0)
 		free(buffer);
 
@@ -53,7 +51,7 @@ void loadROM(char* filename)
 
 	buffer = (unsigned char *)malloc(buffer_size);
 
-	uint32 bytesread = fread(buffer, buffer_size, 1, romfile);
+	fread(buffer, buffer_size, 1, romfile);
 
 	if (!fclose(romfile))
 		printf("fclose(): Unable to close file!\n");
@@ -156,7 +154,7 @@ int main(int argc, char *argv[])
 
 	if(romname!=NULL){
 		loadROM(romname);
-		supervision_load((u8*)buffer, (uint32)buffer_size);
+		supervision_load((uint8*)buffer, (uint32)buffer_size);
 	} else {
 		handleFileMenu(); // File menu
 	}

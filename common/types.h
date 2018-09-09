@@ -34,35 +34,23 @@
 
 #define BIT(n) (1 << (n))
 
-#define byte   BYTE
-//#define word   WORD
-
-#define UINT8   BYTE
-#define UINT16  WORD
-#define INT8    signed char
-#define INT16   signed short
-#define INT32   signed long
-#define UINT32  unsigned long
-//#define INT64   signed __int64
-//#define UINT64  unsigned __int64
-
-#define uint8   UINT8
-#define uint16  UINT16
-#define uint32  UINT32
-#define uint64  UINT64
-#define int8    INT8
-#define int16   INT16
-#define int32   INT32
-//#define int64   INT64
+#define uint8   BYTE
+#define uint16  WORD
+#define uint32  unsigned long
+#define uint64  signed __int64
+#define int8    signed char
+#define int16   signed short
+#define int32   signed long
+#define int64   unsigned __int64
 
 #define u8      uint8
 #define u16     uint16
 #define u32     uint32
-//#define u64     uint64
+#define u64     uint64
 #define s8      int8
 #define s16     int16
 #define s32     int32
-//#define s64     int64
+#define s64     int64
 
 #else
 

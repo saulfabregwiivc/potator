@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				// Manage keys
-				controls_state = 0;				
+				unsigned char controls_state = 0;
 				
 				if ( (keys[SDLK_UP] == SDL_PRESSED) )  controls_state |=  keyCoresp[GameConf.OD_Joy[0]]; // UP
 				if ( (keys[SDLK_DOWN] == SDL_PRESSED) ) controls_state |=  keyCoresp[GameConf.OD_Joy[1]]; // DOWN
@@ -263,11 +263,12 @@ int main(int argc, char *argv[]) {
 				}
 				else if ( (keys[SDLK_RETURN] == SDL_PRESSED) ) controls_state |=  keyCoresp[GameConf.OD_Joy[10]]; // START
 				else if ( (keys[SDLK_ESCAPE] == SDL_PRESSED) )  controls_state |=  keyCoresp[GameConf.OD_Joy[11]]; // SELECT
+				controls_state_write(0, controls_state);
 
 				// Update emulation
-				supervision_exec((unsigned short *) XBuf,1);sound_decrement();
+				supervision_exec((unsigned short *) XBuf,1);
 				graphics_paint();
-		 
+
 				nextTick += interval;
 				break;
 		}

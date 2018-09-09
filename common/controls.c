@@ -12,7 +12,7 @@
 
 static uint8 controls_state;
 
-void controls_reset()
+void controls_reset(void)
 {
     controls_state = 0x00;
 }
@@ -30,9 +30,9 @@ void controls_state_write(uint8 type, uint8 data)
          controls_state = data;
 }
 
-uint8 controls_read(uint32 addr)
+uint8 controls_read(void)
 {
-    return(controls_state^0xff); 
+    return controls_state ^ 0xff; 
 }
 
 BOOL controls_update(void)
@@ -75,13 +75,10 @@ BOOL controls_update(void)
     SDL_Event event;
 
     // Check for events
-    while( SDL_PollEvent( &event ) )
-    {
-        switch( event.type )
-        {
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
             case SDL_KEYDOWN:
-                switch( event.key.keysym.sym )
-                {
+                switch( event.key.keysym.sym ) {
                     case SDLK_RIGHT:
                         controls_state|=0x01;
                         break;
@@ -114,5 +111,5 @@ BOOL controls_update(void)
     }
 #endif
 
-    return(TRUE);
+    return TRUE;
 }

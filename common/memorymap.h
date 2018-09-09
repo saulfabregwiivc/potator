@@ -11,11 +11,11 @@ enum
     BANK  = 0x26,
 };
 
-void memorymap_set_dma_finished();
-void memorymap_set_timer_shot();
+void memorymap_set_dma_finished(void);
+void memorymap_set_timer_shot(void);
 
-void memorymap_init();
-void memorymap_reset();
+void memorymap_init(void);
+void memorymap_reset(void);
 uint8  memorymap_registers_read(uint32 Addr);
 void memorymap_registers_write(uint32 Addr, uint8 Value);
 void memorymap_load(uint8 *rom, uint32 size);
@@ -35,4 +35,3 @@ extern uint8 *memorymap_upperRomBank;
 extern uint8 *memorymap_regs;
 
 #endif
-

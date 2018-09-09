@@ -3,7 +3,7 @@
 static int32 timer_cycles;
 static BOOL  timer_activated;
 
-void timer_reset()
+void timer_reset(void)
 {
     timer_cycles = 0;
     timer_activated = FALSE;

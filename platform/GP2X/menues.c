@@ -18,7 +18,7 @@
 #include "types.h"
 
 FileEntry FileList[1024];
-u32 fileCounter;
+uint32 fileCounter;
 
 extern uint8* buffer;
 extern unsigned int buffer_size;
@@ -175,10 +175,10 @@ void fillList(void)
 	fileCounter = curFile;
 }
 
-void printList(u32 startPos)
+void printList(uint32 startPos)
 {
-	u32 i = startPos;
-	u32 shown;
+	uint32 i = startPos;
+	uint32 shown;
 
 	if(fileCounter > 18) 
 		shown = 19;
@@ -201,7 +201,7 @@ void handleFileMenu(void)
 {
 
 	BOOL isSelected = FALSE;
-	s32 curFile = 0;
+	int32 curFile = 0;
 	int virtualFile = 0;
 		
 	fillList();
@@ -269,7 +269,7 @@ void handleFileMenu(void)
 				RESIZE();
 				loadROM(FileList[curFile + virtualFile].fName);
 				textClear();
-				supervision_load((u8*)buffer, (uint32)buffer_size);
+				supervision_load((uint8*)buffer, (uint32)buffer_size);
 				textClear();
 				return;
 			}

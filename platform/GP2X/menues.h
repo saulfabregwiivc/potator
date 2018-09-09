@@ -54,7 +54,7 @@ typedef struct
 } FileEntry, *pFileEntry;
 
 extern FileEntry FileList[1024];
-extern u32 fileCounter;
+extern uint32 fileCounter;
 extern char *romname;
 
 typedef struct {

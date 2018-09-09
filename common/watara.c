@@ -22,10 +22,10 @@ static M6502 m6502_registers;
 
 static BOOL irq = FALSE;
 
-void m6502_set_irq_line(int assert_line)
+void m6502_set_irq_line(int assertLine)
 {
-    m6502_registers.IRequest = assert_line ? INT_IRQ : INT_NONE;
-    irq = assert_line;
+    m6502_registers.IRequest = assertLine ? INT_IRQ : INT_NONE;
+    irq = assertLine;
 }
 
 byte Loop6502(register M6502 *R)
@@ -34,7 +34,7 @@ byte Loop6502(register M6502 *R)
         irq = FALSE;
         return INT_IRQ;
     }
-    return (INT_QUIT);
+    return INT_QUIT;
 }
 
 void supervision_init(void)
@@ -48,7 +48,7 @@ BOOL supervision_load(uint8 *rom, uint32 romSize)
     memorymap_load(rom, romSize);
     supervision_reset();
 
-    return(TRUE);
+    return TRUE;
 }
 
 void supervision_reset(void)
@@ -72,12 +72,12 @@ void supervision_set_colour_scheme(int sv_colourScheme)
 
 M6502 *supervision_get6502regs(void)
 {
-    return(&m6502_registers);
+    return &m6502_registers;
 }
 
 BOOL supervision_update_input(void)
 {
-    return(controls_update());
+    return controls_update();
 }
 
 void supervision_exec(int16 *backbuffer, BOOL bRender)
@@ -150,7 +150,7 @@ int sv_loadState(const char *statepath, int id)
     sleep(1);
 #endif
 
-    return(1);
+    return 1;
 }
 
 int sv_saveState(const char *statepath, int id)
@@ -190,5 +190,5 @@ int sv_saveState(const char *statepath, int id)
     sleep(1);
 #endif
 
-    return(1);
+    return 1;
 }

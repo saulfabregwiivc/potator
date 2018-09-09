@@ -40,10 +40,6 @@ typedef struct  {
 } SVISION_DMA;
 SVISION_DMA m_dma;
 
-/*!
- * Generate U8, 2 channels.
- * \param len in bytes.
- */
 void sound_stream_update(uint8 *stream, int len)
 {
     int i, j;
@@ -61,19 +57,19 @@ void sound_stream_update(uint8 *stream, int len)
                 if (channel->on || channel->count) {
                     int on = FALSE;
                     switch (channel->waveform) {
-                    case 0:
-                        on = channel->pos <= (28 * channel->size) >> 5;
-                        break;
-                    case 1:
-                        on = channel->pos <= (24 * channel->size) >> 5;
-                        break;
-                    default:
-                    case 2:
-                        on = channel->pos <= channel->size / 2;
-                        break;
-                    case 3:
-                        on = channel->pos <= (9 * channel->size) >> 5;
-                        break;
+                        case 0:
+                            on = channel->pos <= (28 * channel->size) >> 5;
+                            break;
+                        case 1:
+                            on = channel->pos <= (24 * channel->size) >> 5;
+                            break;
+                        default:
+                        case 2:
+                            on = channel->pos <= channel->size / 2;
+                            break;
+                        case 3:
+                            on = channel->pos <= (9 * channel->size) >> 5;
+                            break;
                     }
                     //s += on ? channel->volume<<8 : 0;
                     s = on ? channel->volume : 0; // << 8 : 0;
@@ -100,18 +96,18 @@ void sound_stream_update(uint8 *stream, int len)
             m_noise.pos += m_noise.step;
             if (m_noise.pos >= 1.0) {
                 switch (m_noise.type) {
-                case SVISION_NOISE_Type7Bit:
-                    m_noise.value = m_noise.state & 0x40 ? 1 : 0;
-                    b1 = (m_noise.state & 0x40) != 0;
-                    b2 = (m_noise.state & 0x20) != 0;
-                    m_noise.state = (m_noise.state << 1) + (b1 != b2 ? 1 : 0);
-                    break;
-                case SVISION_NOISE_Type14Bit:
-                default:
-                    m_noise.value = m_noise.state & 0x2000 ? 1 : 0;
-                    b1 = (m_noise.state & 0x2000) != 0;
-                    b2 = (m_noise.state & 0x1000) != 0;
-                    m_noise.state = (m_noise.state << 1) + (b1 != b2 ? 1 : 0);
+                    case SVISION_NOISE_Type7Bit:
+                        m_noise.value = m_noise.state & 0x40 ? 1 : 0;
+                        b1 = (m_noise.state & 0x40) != 0;
+                        b2 = (m_noise.state & 0x20) != 0;
+                        m_noise.state = (m_noise.state << 1) + (b1 != b2 ? 1 : 0);
+                        break;
+                    case SVISION_NOISE_Type14Bit:
+                    default:
+                        m_noise.value = m_noise.state & 0x2000 ? 1 : 0;
+                        b1 = (m_noise.state & 0x2000) != 0;
+                        b2 = (m_noise.state & 0x1000) != 0;
+                        m_noise.state = (m_noise.state << 1) + (b1 != b2 ? 1 : 0);
                 }
                 m_noise.pos -= 1;
             }
@@ -151,7 +147,8 @@ void sound_stream_update(uint8 *stream, int len)
     }
 }
 
-void sound_decrement() {
+void sound_decrement(void)
+{
     if (m_channel[0].count > 0)
         m_channel[0].count--;
     if (m_channel[1].count > 0)
@@ -160,13 +157,13 @@ void sound_decrement() {
         m_noise.count--;
 }
 
-void soundport_w(int which, int offset, int data) {
+void soundport_w(int which, int offset, int data)
+{
     SVISION_CHANNEL *channel = &m_channel[which];
     unsigned short size;
 
     //m_mixer_channel->update();
     channel->reg[offset] = data;
-
     switch (offset) {
         case 0:
         case 1:
@@ -190,8 +187,8 @@ void soundport_w(int which, int offset, int data) {
     }
 }
 
-void svision_sounddma_w(int offset, int data) {
-//    logerror("%.6f svision snddma write %04x %02x\n", space.machine().time().as_double(),offset+0x18,data);
+void svision_sounddma_w(int offset, int data)
+{
     m_dma.reg[offset] = data;
     switch (offset) {
         case 0:
@@ -216,8 +213,8 @@ void svision_sounddma_w(int offset, int data) {
     }
 }
 
-void  svision_noise_w(int offset, int data) {
-    //  logerror("%.6f svision noise write %04x %02x\n",machine.time(),offset+0x28,data);
+void  svision_noise_w(int offset, int data)
+{
     m_noise.reg[offset] = data;
     switch (offset) {
         case 0:

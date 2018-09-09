@@ -84,7 +84,7 @@ void InitVideo(void)
 
 	SUB_BG0_CR = BG_MAP_BASE(31);
 	BG_PALETTE_SUB[255] = RGB15(31,31,31);
-	consoleInitDefault((u16*)SCREEN_BASE_BLOCK_SUB(31), (u16*)CHAR_BASE_BLOCK_SUB(0), 16);
+	consoleInitDefault((uint16*)SCREEN_BASE_BLOCK_SUB(31), (uint16*)CHAR_BASE_BLOCK_SUB(0), 16);
 	
 	BG3_CR = BG_BMP16_256x256 | (1<<13);
 	BG3_XDX = 1 << 8; BG3_XDY = 0 << 8;
@@ -97,7 +97,7 @@ void CheckKeys(void)
 {
 	scanKeys();
 
-	u32 keys = keysHeld();
+	uint32 keys = keysHeld();
 
 	if(keys & KEY_L && keys & KEY_R) { //Checks if L and R are pushed
 	supervision_reset(); //Reset emulator
@@ -121,7 +121,7 @@ void CheckKeys(void)
 	/*if(keys & KEY_START && keys & KEY_SELECT) {
 	dotextmenu();
 	loadROM();
-	supervision_load((u8*)buffer, (uint32)buffer_size);
+	supervision_load((uint8*)buffer, (uint32)buffer_size);
 	iprintf("\nLoad Rom Seccessfully\n"); }*/
 }
 
@@ -148,7 +148,7 @@ int main()
 	iprintf("\nFailed to init fat");
 	} 
 
-	supervision_load((u8*)buffer, (uint32)buffer_size);
+	supervision_load((uint8*)buffer, (uint32)buffer_size);
 	iprintf("\nLoad Rom Seccessfully\n");
 		
 	while(1)
