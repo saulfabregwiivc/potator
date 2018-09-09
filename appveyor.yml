@@ -1,0 +1,51 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+clone_folder: c:\projects\potator
+environment:
+  SDL_VERSION: 2.0.8
+install:
+- ps: >-
+    New-Item c:\projects\sdl -type directory
+
+    New-Item c:\projects\potator\artifacts -type directory
+
+    cd c:\projects\sdl
+
+    Start-FileDownload "https://www.libsdl.org/release/SDL2-devel-${env:SDL_VERSION}-VC.zip"
+
+    Start-FileDownload "https://www.libsdl.org/release/SDL2-${env:SDL_VERSION}-win32-x86.zip"
+
+    7z x SDL2-devel-${env:SDL_VERSION}-VC.zip
+
+    7z x SDL2-${env:SDL_VERSION}-win32-x86.zip
+
+    Copy-Item SDL2.dll c:\projects\potator\artifacts\
+
+
+    cd c:\projects\sdl\SDL2-${env:SDL_VERSION}
+
+    New-Item sdl2-config.cmake -type file
+
+    Add-Content sdl2-config.cmake '
+
+    set(SDL2_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
+
+    if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+      set(SDL2_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/lib/x64/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x64/SDL2main.lib")
+    else ()
+      set(SDL2_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/lib/x86/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x86/SDL2main.lib")
+    endif ()
+
+    string(STRIP "${SDL2_LIBRARY}" SDL2_LIBRARY)'
+
+
+    cd c:\projects\potator\platform\SDL2\
+
+    cmake -DSDL2_DIR=c:\projects\sdl\SDL2-${env:SDL_VERSION} -DCMAKE_CONFIGURATION_TYPES=Release ./
+build:
+  verbosity: minimal
+after_build:
+- ps: Copy-Item C:\projects\potator\platform\SDL2\Release\PotatorSDL2.exe C:\projects\potator\artifacts\
+artifacts:
+- path: artifacts
+  name: artifacts
