@@ -16,7 +16,7 @@
 static uint16 *supervision_palette;
 static uint8   gpu_regs[4];
 #ifdef NDS
-#define RGB555(R,G,B) ((((int)(B))<<10)|(((int)(G))<<5)|(((int)(R)))|BIT(15))
+#define RGB555(R,G,B) ((((int)(B))<<10)|(((int)(G))<<5)|(((int)(R)))|(1<<15))
 #else
 #define RGB555(R,G,B) ((((int)(B))<<10)|(((int)(G))<<5)|(((int)(R))))
 #endif
@@ -28,17 +28,17 @@ void gpu_init(void)
 
 void gpu_reset(void)
 {
-#ifdef GP2X
+#if defined(GP2X)
     supervision_palette[3] = gp2x_video_RGB_color16(  0,  0,  0);
     supervision_palette[2] = gp2x_video_RGB_color16( 85, 85, 85);
     supervision_palette[1] = gp2x_video_RGB_color16(170,170,170);
     supervision_palette[0] = gp2x_video_RGB_color16(170,170,170);
-#elif NDS
+#elif defined(NDS)
     supervision_palette[3] = RGB555( 0, 0, 0);
     supervision_palette[2] = RGB555(10,10,10);
     supervision_palette[1] = RGB555(20,20,20);
     supervision_palette[0] = RGB555(30,30,30);
-#elif _ODSDL_
+#elif defined(_ODSDL_)
     supervision_palette[3] = PIX_TO_RGB(actualScreen->format,   0,   0,   0);
     supervision_palette[2] = PIX_TO_RGB(actualScreen->format,  85,  85,  85);
     supervision_palette[1] = PIX_TO_RGB(actualScreen->format, 170, 170, 170);
@@ -81,17 +81,17 @@ void gpu_set_colour_scheme(int colourScheme)
             colourScheme = 0; 
             break;
     }
-#ifdef GP2X
+#if defined(GP2X)
     supervision_palette[3] = gp2x_video_RGB_color16(  0*redf,  0*greenf,  0*bluef);
     supervision_palette[2] = gp2x_video_RGB_color16( 85*redf, 85*greenf, 85*bluef);
     supervision_palette[1] = gp2x_video_RGB_color16(170*redf,170*greenf,170*bluef);
     supervision_palette[0] = gp2x_video_RGB_color16(255*redf,255*greenf,255*bluef);
-#elif NDS
+#elif defined(NDS)
     supervision_palette[3] = RGB555( 0*redf, 0*greenf, 0*bluef);
     supervision_palette[2] = RGB555(10*redf,10*greenf,10*bluef);
     supervision_palette[1] = RGB555(20*redf,20*greenf,20*bluef);
     supervision_palette[0] = RGB555(30*redf,30*greenf,30*bluef);
-#elif _ODSDL_
+#elif defined(_ODSDL_)
     int p11 =  (int)85 * redf; int p12 =  (int)85 * greenf; int p13 =  (int)85 * bluef;
     int p21 = (int)170 * redf; int p22 = (int)170 * greenf; int p23 = (int)170 * bluef;
     int p31 = (int)255 * redf; int p32 = (int)255 * greenf; int p33 = (int)255 * bluef;
@@ -117,7 +117,7 @@ uint8 gpu_read(uint32 addr)
     return gpu_regs[(addr&0x03)];
 }
 
-void gpu_render_scanline(uint32 scanline, int16 *backbuffer)
+void gpu_render_scanline(uint32 scanline, uint16 *backbuffer)
 {
     uint8 *vram_line = &(memorymap_getUpperRamPointer())[(gpu_regs[2] >> 2) + (scanline*0x30)];
     uint8 x;
@@ -146,7 +146,7 @@ void gpu_render_scanline_fast(uint32 scanline, uint16 *backbuffer)
     //if (end_x != 163) printf("end_x = %d\n", end_x);
     for (x = start_x; x < end_x; x += 4) {
         uint8 b = *(vram_line++);
-        *(buf++) = (supervision_palette[((b >> 2) & 0x03)] << 16) | (supervision_palette[((b) & 0x03)]);
+        *(buf++) = (supervision_palette[((b >> 2) & 0x03)] << 16) | (supervision_palette[((b >> 0) & 0x03)]);
         *(buf++) = (supervision_palette[((b >> 6) & 0x03)] << 16) | (supervision_palette[((b >> 4) & 0x03)]);
     }
 }

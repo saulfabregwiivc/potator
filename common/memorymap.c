@@ -17,10 +17,10 @@ static BOOL timer_shot   = FALSE;
 
 static void check_irq(void)
 {
-    int irq = timer_shot && ((memorymap_regs[BANK] >> 1) & 1);
-    irq = irq || (dma_finished && ((memorymap_regs[BANK] >> 2) & 1));
+    BOOL irq = (timer_shot && ((memorymap_regs[BANK] >> 1) & 1))
+          || (dma_finished && ((memorymap_regs[BANK] >> 2) & 1));
 
-    void m6502_set_irq_line(int);
+    void m6502_set_irq_line(BOOL);
     m6502_set_irq_line(irq);
 }
 
@@ -50,6 +50,7 @@ void memorymap_reset(void)
 
     memset(memorymap_lowerRam, 0x00, 0x2000);
     memset(memorymap_upperRam, 0x00, 0x2000);
+    memset(memorymap_regs,     0x00, 0x2000);
 
     dma_finished = FALSE;
     timer_shot   = FALSE;
@@ -75,6 +76,10 @@ uint8 memorymap_registers_read(uint32 Addr)
             timer_shot = FALSE;
             check_irq();
             break;
+        case 0x25:
+            dma_finished = FALSE;
+            check_irq();
+            break;
         case 0x27:
             data &= ~3;
             if (timer_shot) {
@@ -83,10 +88,6 @@ uint8 memorymap_registers_read(uint32 Addr)
             if (dma_finished) {
                 data |= 2;
             }
-            break;
-        case 0x25:
-            dma_finished = FALSE;
-            check_irq();
             break;
     }
     return data;

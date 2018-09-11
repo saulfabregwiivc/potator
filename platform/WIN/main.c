@@ -31,7 +31,7 @@ HMENU menu;
 DWORD threadID;
 HANDLE runthread=INVALID_HANDLE_VALUE;
 
-uint8* buffer;
+UINT8* buffer;
 unsigned int buffer_size = 0;
 
 unsigned short screenbuffer[161*161];
@@ -52,19 +52,19 @@ DWORD WINAPI run( LPVOID lpParameter)
      char txt[80];
      BITMAPV4HEADER bmi;
      int wait=0;
-     u64 freq;
-     u64 OneFrameTime;
+     UINT64 freq;
+     UINT64 OneFrameTime;
      int framestoskip=0;
      int framesskipped=0;
      int skipnextframe=0;
-     u64 lastticks=0;
-     u64 curticks=0;
-     u64 diffticks=0;
-     u32 framecount=0;
-     u64 onesecondticks=0;
+     UINT64 lastticks=0;
+     UINT64 curticks=0;
+     UINT64 diffticks=0;
+     UINT32 framecount=0;
+     UINT64 onesecondticks=0;
      int fps=0;
      int fpsframecount=0;
-     u64 fpsticks=0;
+     UINT64 fpsticks=0;
 
      //CreateBitmapIndirect(&bmi);
      memset(&bmi, 0, sizeof(bmi));
@@ -88,7 +88,7 @@ DWORD WINAPI run( LPVOID lpParameter)
           {
                //controls_update();
 
-               supervision_exec((int16*)screenbuffer,1);
+               supervision_exec(screenbuffer);
                
                //controls_reset();
 
@@ -142,7 +142,7 @@ DWORD WINAPI run( LPVOID lpParameter)
                   QueryPerformanceCounter((LARGE_INTEGER *)&curticks);
                   diffticks = curticks-lastticks;
 
-                  if ((onesecondticks+diffticks) > (OneFrameTime * (u64)framecount) &&
+                  if ((onesecondticks+diffticks) > (OneFrameTime * (UINT64)framecount) &&
                       framesskipped < 9)
                   {                     
                      // Skip the next frame
@@ -151,14 +151,14 @@ DWORD WINAPI run( LPVOID lpParameter)
                      // How many frames should we skip?
                      framestoskip = 1;
                   }
-                  else if ((onesecondticks+diffticks) < (OneFrameTime * (u64)framecount))
+                  else if ((onesecondticks+diffticks) < (OneFrameTime * (UINT64)framecount))
                   {
                      // Check to see if we need to limit speed at all
                      for (;;)
                      {
                         QueryPerformanceCounter((LARGE_INTEGER *)&curticks);
                         diffticks = curticks-lastticks;
-                        if ((onesecondticks+diffticks) >= (OneFrameTime * (u64)framecount))
+                        if ((onesecondticks+diffticks) >= (OneFrameTime * (UINT64)framecount))
                            break;
                      }
                   }
@@ -172,7 +172,7 @@ DWORD WINAPI run( LPVOID lpParameter)
                      framestoskip = frameskiprate + 1;
                }
 
-               if(controls_read(0)!=0) controls_state_write(0,0);
+               if(controls_read()!=0) controls_state_write(0,0);
                Sleep(0);
           }
           execute = FALSE;
@@ -260,7 +260,7 @@ LRESULT CALLBACK WndProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                             }
 
                             loadROM(filename);
-                            supervision_load((u8*)buffer, (uint32)buffer_size);
+                            supervision_load((UINT8*)buffer, (UINT32)buffer_size);
                             execute=TRUE;
                        }
                   break;

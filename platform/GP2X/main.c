@@ -176,16 +176,16 @@ int main(int argc, char *argv[])
 
 		 switch(currentConfig.videoMode){
 			case 0: 
-				supervision_exec((int16*)screenbuffer,1);
+				supervision_exec(screenbuffer);
 
 				for(j=0; j < 160; j++) 
 		 			gp2x_memcpy(screen16+(80+(j+40)*320),screenbuffer+(j * 160),160*2);
 				break;
 			case 1: 
-				supervision_exec2((int16*)screen16,1); 
+				//supervision_exec2(screen16); 
 				break;
 			case 2: 
-				supervision_exec3((int16*)screen16,1);
+				//supervision_exec3(screen16);
 				break;
 			default: break;
 		 }

@@ -3,25 +3,11 @@
 
 #if defined NDS
 #include <nds/jtypes.h>
-#elif defined WIN
-#include <windows.h>
 #endif
 
 #ifdef NULL
 #undef NULL
 #define NULL 0
-#endif
-
-#ifndef BYTE
-#define BYTE unsigned char
-#endif
-
-#ifndef WORD
-#define WORD unsigned short
-#endif
-
-#ifndef DWORD
-#define DWORD unsigned long
 #endif
 
 #ifndef TRUE
@@ -30,31 +16,18 @@
 #define FALSE 0
 #endif
 
-#if defined(_WIN_) || defined(_ODSDL_)
+#if defined(_ODSDL_)
 
-#define BIT(n) (1 << (n))
-
-#define uint8   BYTE
-#define uint16  WORD
+#define uint8   unsigned char
+#define uint16  unsigned short
 #define uint32  unsigned long
-#define uint64  signed __int64
+//#define uint64  signed __int64
 #define int8    signed char
 #define int16   signed short
 #define int32   signed long
-#define int64   unsigned __int64
-
-#define u8      uint8
-#define u16     uint16
-#define u32     uint32
-#define u64     uint64
-#define s8      int8
-#define s16     int16
-#define s32     int32
-#define s64     int64
+//#define int64   unsigned __int64
 
 #else
-
-#define BIT(n) (1 << (n))
 
 typedef unsigned char           uint8;
 typedef unsigned short int      uint16;

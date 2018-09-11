@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     }
 
     supervision_init();
-    supervision_load((uint8_t *)buffer, (uint32_t)bufferSize);
+    supervision_load(buffer, bufferSize);
 
     //SDL_PauseAudio(0);
     SDL_PauseAudioDevice(devid, 0);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
         HandleInput();
 
         // Emulate
-        supervision_exec((int16_t *)screenBuffer, 1);
+        supervision_exec(screenBuffer);
 
         // Draw
         SDL_UpdateTexture(sdlTexture, NULL, screenBuffer, 160 * sizeof(uint16_t));

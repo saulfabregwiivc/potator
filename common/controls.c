@@ -39,7 +39,7 @@ BOOL controls_update(void)
 {
     controls_state = 0;
 
-#ifdef GP2X
+#if defined(GP2X)
     unsigned long  pad=gp2x_joystick_read(0);
 
     if (pad & GP2X_UP)     controls_state|=0x08;
@@ -51,7 +51,7 @@ BOOL controls_update(void)
     if (pad & GP2X_B)      controls_state|=0x20;
     if (pad & GP2X_START)  controls_state|=0x80;
     if (pad & GP2X_SELECT) controls_state|=0x40;
-#elif NDS
+#elif defined(NDS)
     if (!(REG_KEYINPUT & KEY_RIGHT))  controls_state|=0x01;
     if (!(REG_KEYINPUT & KEY_LEFT))   controls_state|=0x02;
     if (!(REG_KEYINPUT & KEY_DOWN))   controls_state|=0x04;
@@ -60,7 +60,7 @@ BOOL controls_update(void)
     if (!(REG_KEYINPUT & KEY_B))      controls_state|=0x20;
     if (!(REG_KEYINPUT & KEY_SELECT)) controls_state|=0x40;
     if (!(REG_KEYINPUT & KEY_START))  controls_state|=0x80;
-#elif _SDL_ 
+#elif defined(_SDL_) 
     uint8 *keystate = SDL_GetKeyState(NULL);
 
     if (keystate[SDLK_RIGHT]) controls_state|=0x01;

@@ -157,8 +157,8 @@ int main()
 
 		controls_update();
 
-		supervision_exec((int16*)screenbuffer,1); //Execute the emulator
-//		supervision_exec_fast((int16*)screenbuffer,1); //Execute the emulator
+		supervision_exec(screenbuffer); //Execute the emulator
+//		supervision_exec_fast(screenbuffer); //Execute the emulator
 
 		for(j=0; j < 161; j++)
 			dmaCopyWordsAsynch(3, screenbuffer+(j * 160), BG_GFX+(j*256), 160*2); //copy frame buffer to screen

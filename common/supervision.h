@@ -21,12 +21,11 @@
 void supervision_init(void);
 void supervision_reset(void);
 void supervision_done(void);
-void supervision_exec(int16 *backbuffer, BOOL bRender);
+void supervision_exec(uint16 *backbuffer);
 BOOL supervision_load(uint8 *rom, uint32 romSize);
 BOOL supervision_update_input(void);
 void supervision_set_colour_scheme(int ws_colourScheme);
 M6502 *supervision_get6502regs(void);
-void supervision_turnSound(BOOL bOn);
 
 int sv_loadState(const char *statepath, int id);
 int sv_saveState(const char *statepath, int id);

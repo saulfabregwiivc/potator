@@ -22,7 +22,7 @@ static M6502 m6502_registers;
 
 static BOOL irq = FALSE;
 
-void m6502_set_irq_line(int assertLine)
+void m6502_set_irq_line(BOOL assertLine)
 {
     m6502_registers.IRequest = assertLine ? INT_IRQ : INT_NONE;
     irq = assertLine;
@@ -82,13 +82,13 @@ BOOL supervision_update_input(void)
     return controls_update();
 }
 
-void supervision_exec(int16 *backbuffer, BOOL bRender)
+void supervision_exec(uint16 *backbuffer)
 {
-    uint32 supervision_scanline, scan1 = 0;
+    uint32 supervision_scanline, scan = 0;
 
     uint8 *m_reg = memorymap_getRegisters();
     //if (!((m_reg[BANK] >> 3) & 1)) { printf("ndraw "); }
-    scan1 = m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30;
+    scan = m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30;
 
     for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++)
     {
@@ -101,22 +101,18 @@ void supervision_exec(int16 *backbuffer, BOOL bRender)
         backbuffer += 160+96;
 #else
         //gpu_render_scanline(supervision_scanline, backbuffer);
-        gpu_render_scanline_fast(scan1, backbuffer);
+        gpu_render_scanline_fast(scan, backbuffer);
         backbuffer += 160;
-        scan1 += 0x30;
+        scan += 0x30;
 #endif
-        if (scan1 >= 0x1fe0)
-            scan1 = 0; // SSSnake
+        if (scan >= 0x1fe0)
+            scan = 0; // SSSnake
     }
 
     if (Rd6502(0x2026)&0x01)
         Int6502(supervision_get6502regs(), INT_NMI);
 
-    sound_decrement(); // MCFG_SCREEN_VBLANK_CALLBACK, svision.cpp
-}
-
-void supervision_turnSound(BOOL bOn)
-{
+    sound_decrement();
 }
 
 int sv_loadState(const char *statepath, int id)

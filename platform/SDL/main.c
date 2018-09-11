@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		
 	supervision_init(); //Init the emulator	
 	if(romname) loadROM(romname); else loadROM("rom.sv");		
-	supervision_load((u8*)buffer, (uint32)buffer_size);
+	supervision_load((uint8*)buffer, (uint32)buffer_size);
 
 	while(1)
 	{
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	  {
 		 controls_update();
 
-         supervision_exec((int16*)screenbuffer,1);
+         supervision_exec(screenbuffer);
 		 Draw();
 
 		 controls_reset();

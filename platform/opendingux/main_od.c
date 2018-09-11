@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
 				controls_state_write(0, controls_state);
 
 				// Update emulation
-				supervision_exec((unsigned short *) XBuf,1);
+				supervision_exec(XBuf);
 				graphics_paint();
 
 				nextTick += interval;
