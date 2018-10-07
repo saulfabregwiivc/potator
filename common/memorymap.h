@@ -2,6 +2,7 @@
 #define __MEMORYMAP_H__
 
 #include "supervision.h"
+#include <stdio.h>
 
 enum
 {
@@ -18,7 +19,10 @@ void memorymap_init(void);
 void memorymap_reset(void);
 uint8  memorymap_registers_read(uint32 Addr);
 void memorymap_registers_write(uint32 Addr, uint8 Value);
-void memorymap_load(uint8 *rom, uint32 size);
+void memorymap_load(uint8 **rom, uint32 size);
+
+void memorymap_save_state(FILE *fp);
+void memorymap_load_state(FILE *fp);
 
 uint8 *memorymap_getUpperRamPointer(void);
 uint8 *memorymap_getLowerRamPointer(void);

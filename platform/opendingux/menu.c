@@ -911,7 +911,7 @@ void menuSaveState(void) {
 		strcpy(szFile, gameName);
 		strcpy(strrchr(szFile, '.'), ".sta");
 		print_string("Saving...", COLOR_OK, COLOR_BG, 8,240-5 -10*3);
-		sv_saveState(szFile,1);
+		supervision_save_state(szFile,1);
 		print_string("Save OK",COLOR_OK,COLOR_BG, 8+10*8,240-5 -10*3);
 		screen_flip();
 		screen_waitkey();
@@ -926,7 +926,7 @@ void menuLoadState(void) {
 		strcpy(szFile, gameName);
 		strcpy(strrchr(szFile, '.'), ".sta");
 		print_string("Loading...", COLOR_OK, COLOR_BG, 8,240-5 -10*3);
-		sv_loadState(szFile,1);
+		supervision_load_state(szFile,1);
 		print_string("Load OK",COLOR_OK,COLOR_BG, 8+10*8,240-5 -10*3);
 		screen_flip();
 		screen_waitkey();

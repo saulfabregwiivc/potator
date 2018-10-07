@@ -19,7 +19,6 @@
 #endif
 
 static M6502 m6502_registers;
-
 static BOOL irq = FALSE;
 
 void m6502_set_irq_line(BOOL assertLine)
@@ -39,27 +38,19 @@ byte Loop6502(register M6502 *R)
 
 void supervision_init(void)
 {
-    memorymap_init();
     gpu_init();
-}
-
-BOOL supervision_load(uint8 *rom, uint32 romSize)
-{
-    memorymap_load(rom, romSize);
-    supervision_reset();
-
-    return TRUE;
+    memorymap_init();
 }
 
 void supervision_reset(void)
 {
-    memorymap_reset();
-    gpu_reset();
-    timer_reset();
     controls_reset();
+    gpu_reset();
+    memorymap_reset();
+    sound_reset();
+    timer_reset();
 
     Reset6502(&m6502_registers);
-
     irq = FALSE;
 }
 
@@ -67,14 +58,12 @@ void supervision_done(void)
 {
 }
 
-void supervision_set_colour_scheme(int sv_colourScheme)
+BOOL supervision_load(uint8 **rom, uint32 romSize)
 {
-    gpu_set_colour_scheme(sv_colourScheme);
-}
+    memorymap_load(rom, romSize);
+    supervision_reset();
 
-M6502 *supervision_get6502regs(void)
-{
-    return &m6502_registers;
+    return TRUE;
 }
 
 BOOL supervision_update_input(void)
@@ -82,23 +71,39 @@ BOOL supervision_update_input(void)
     return controls_update();
 }
 
+void supervision_set_colour_scheme(int colourScheme)
+{
+    gpu_set_colour_scheme(colourScheme);
+}
+
+void supervision_set_ghosting(int frameCount)
+{
+    gpu_set_ghosting(frameCount);
+}
+
+M6502 *supervision_get6502regs(void)
+{
+    return &m6502_registers;
+}
+
 void supervision_exec(uint16 *backbuffer)
 {
     uint32 supervision_scanline, scan = 0;
-
     uint8 *m_reg = memorymap_getRegisters();
-    //if (!((m_reg[BANK] >> 3) & 1)) { printf("ndraw "); }
-    scan = m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30;
 
-    for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++)
-    {
-        m6502_registers.ICount = 512; 
+    for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++) {
+        m6502_registers.ICount = 512;
         timer_exec(m6502_registers.ICount);
 
         Run6502(&m6502_registers);
+    }
+
+    //if (!((m_reg[BANK] >> 3) & 1)) { printf("LCD off\n"); }
+    scan = m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30;
+    for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++) {
 #ifdef NDS
         gpu_render_scanline(supervision_scanline, backbuffer);
-        backbuffer += 160+96;
+        backbuffer += 160 + 96;
 #else
         //gpu_render_scanline(supervision_scanline, backbuffer);
         gpu_render_scanline_fast(scan, backbuffer);
@@ -109,84 +114,70 @@ void supervision_exec(uint16 *backbuffer)
             scan = 0; // SSSnake
     }
 
-    if (Rd6502(0x2026)&0x01)
+    if (Rd6502(0x2026) & 0x01)
         Int6502(supervision_get6502regs(), INT_NMI);
 
     sound_decrement();
 }
 
-int sv_loadState(const char *statepath, int id)
+int supervision_save_state(const char *statepath, int id)
 {
     FILE *fp;
     char newPath[256];
 
     strcpy(newPath, statepath);
-    sprintf(newPath + strlen(newPath) - 3, ".s%d", id);
+    sprintf(newPath + strlen(newPath), ".svst");
 
 #ifdef GP2X
-    gp2x_printf(0,10,220,"newPath = %s",newPath);
     gp2x_video_RGB_flip(0);
-#endif
-#ifdef NDS
-    iprintf("\nnewPath = %s",newPath);
-#endif
-
-    fp = fopen(newPath, "rb");
-
-    if (fp) {
-        fread(&m6502_registers,       1,        sizeof(m6502_registers), fp);
-        fread(memorymap_programRom,   1,   sizeof(memorymap_programRom), fp);
-        fread(memorymap_lowerRam,     1,                         0x2000, fp);
-        fread(memorymap_upperRam,     1,                         0x2000, fp);
-        fread(memorymap_lowerRomBank, 1, sizeof(memorymap_lowerRomBank), fp);
-        fread(memorymap_upperRomBank, 1, sizeof(memorymap_upperRomBank), fp);
-        fread(memorymap_regs,         1,                         0x2000, fp);
-        fclose(fp);
-    }
-
-#ifdef GP2X
-    sleep(1);
-#endif
-
-    return 1;
-}
-
-int sv_saveState(const char *statepath, int id)
-{
-    FILE *fp;
-    char newPath[256];
-
-    strcpy(newPath, statepath);
-    sprintf(newPath + strlen(newPath) - 3, ".s%d", id);
-
-#ifdef GP2X
-    gp2x_printf(0,10,220,"newPath = %s",newPath);
-    gp2x_video_RGB_flip(0);
-#endif
-#ifdef NDS
-    iprintf("\nnewPath = %s",newPath);
 #endif
 
     fp = fopen(newPath, "wb");
-
     if (fp) {
-        fwrite(&m6502_registers,       1,        sizeof(m6502_registers), fp);
-        fwrite(memorymap_programRom,   1,   sizeof(memorymap_programRom), fp);
-        fwrite(memorymap_lowerRam,     1,                         0x2000, fp);
-        fwrite(memorymap_upperRam,     1,                         0x2000, fp);
-        fwrite(memorymap_lowerRomBank, 1, sizeof(memorymap_lowerRomBank), fp);
-        fwrite(memorymap_upperRomBank, 1, sizeof(memorymap_upperRomBank), fp);
-        fwrite(memorymap_regs,         1,                         0x2000, fp);
+        fwrite(&m6502_registers, 1, sizeof(m6502_registers), fp);
+        fwrite(&irq, 1, sizeof(irq), fp);
+
+        memorymap_save_state(fp);
+        timer_save_state(fp);
+
         fflush(fp);
         fclose(fp);
 #ifdef GP2X
         sync();
 #endif
     }
-
 #ifdef GP2X
     sleep(1);
 #endif
+    return 1;
+}
 
+int supervision_load_state(const char *statepath, int id)
+{
+    FILE *fp;
+    char newPath[256];
+
+    strcpy(newPath, statepath);
+    sprintf(newPath + strlen(newPath), ".svst");
+
+#ifdef GP2X
+    gp2x_video_RGB_flip(0);
+#endif
+
+    fp = fopen(newPath, "rb");
+    if (fp) {
+        sound_reset();
+
+        fread(&m6502_registers, 1, sizeof(m6502_registers), fp);
+        fread(&irq, 1, sizeof(irq), fp);
+
+        memorymap_load_state(fp);
+        timer_load_state(fp);
+
+        fclose(fp);
+    }
+#ifdef GP2X
+    sleep(1);
+#endif
     return 1;
 }

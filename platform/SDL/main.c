@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		
 	supervision_init(); //Init the emulator	
 	if(romname) loadROM(romname); else loadROM("rom.sv");		
-	supervision_load((uint8*)buffer, (uint32)buffer_size);
+	supervision_load(&buffer, (uint32)buffer_size);
 
 	while(1)
 	{

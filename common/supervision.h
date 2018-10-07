@@ -13,21 +13,17 @@
 
 #include "./m6502/m6502.h"
 
-#define COLOUR_SCHEME_DEFAULT 0
-#define COLOUR_SCHEME_AMBER   1
-#define COLOUR_SCHEME_GREEN   2
-#define COLOUR_SCHEME_BLUE    3
-
 void supervision_init(void);
 void supervision_reset(void);
 void supervision_done(void);
 void supervision_exec(uint16 *backbuffer);
-BOOL supervision_load(uint8 *rom, uint32 romSize);
+BOOL supervision_load(uint8 **rom, uint32 romSize);
 BOOL supervision_update_input(void);
-void supervision_set_colour_scheme(int ws_colourScheme);
+void supervision_set_colour_scheme(int colourScheme);
+void supervision_set_ghosting(int frameCount);
 M6502 *supervision_get6502regs(void);
 
-int sv_loadState(const char *statepath, int id);
-int sv_saveState(const char *statepath, int id);
+int supervision_save_state(const char *statepath, int id);
+int supervision_load_state(const char *statepath, int id);
 
 #endif

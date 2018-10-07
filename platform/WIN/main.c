@@ -260,7 +260,7 @@ LRESULT CALLBACK WndProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
                             }
 
                             loadROM(filename);
-                            supervision_load((UINT8*)buffer, (UINT32)buffer_size);
+                            supervision_load(&buffer, (UINT32)buffer_size);
                             execute=TRUE;
                        }
                   break;

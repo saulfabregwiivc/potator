@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 
 	if(romname!=NULL){
 		loadROM(romname);
-		supervision_load((uint8*)buffer, (uint32)buffer_size);
+		supervision_load(&buffer, (uint32)buffer_size);
 	} else {
 		handleFileMenu(); // File menu
 	}

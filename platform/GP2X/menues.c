@@ -269,7 +269,7 @@ void handleFileMenu(void)
 				RESIZE();
 				loadROM(FileList[curFile + virtualFile].fName);
 				textClear();
-				supervision_load((uint8*)buffer, (uint32)buffer_size);
+				supervision_load(&buffer, (uint32)buffer_size);
 				textClear();
 				return;
 			}
@@ -496,8 +496,8 @@ void handleMainMenu(void)
 			  case MMOPTION_RESTART: RESIZE(); supervision_reset(); textClear(); return;
 			  case MMOPTION_SELECTOR: handleFileMenu(); return;
 			  case MMOPTION_OPTIONS: handleOptionsMenu(); textClear(); return;
-			  case MMOPTION_SAVESTATE: sv_saveState(romname,saveSlot); textClear();return;
-			  case MMOPTION_LOADSTATE: sv_loadState(romname,saveSlot); textClear();return;
+			  case MMOPTION_SAVESTATE: supervision_save_state(romname,saveSlot); textClear();return;
+			  case MMOPTION_LOADSTATE: supervision_load_state(romname,saveSlot); textClear();return;
 			  case MMOPTION_EXIT: exitMenu(); break;
 			  default: return;
 			}

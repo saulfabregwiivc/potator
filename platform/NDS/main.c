@@ -121,7 +121,7 @@ void CheckKeys(void)
 	/*if(keys & KEY_START && keys & KEY_SELECT) {
 	dotextmenu();
 	loadROM();
-	supervision_load((uint8*)buffer, (uint32)buffer_size);
+	supervision_load(&buffer, (uint32)buffer_size);
 	iprintf("\nLoad Rom Seccessfully\n"); }*/
 }
 
@@ -148,7 +148,7 @@ int main()
 	iprintf("\nFailed to init fat");
 	} 
 
-	supervision_load((uint8*)buffer, (uint32)buffer_size);
+	supervision_load(&buffer, (uint32)buffer_size);
 	iprintf("\nLoad Rom Seccessfully\n");
 		
 	while(1)

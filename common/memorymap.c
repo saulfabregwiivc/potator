@@ -65,7 +65,6 @@ uint8 memorymap_registers_read(uint32 Addr)
         case 0x02:
         case 0x03:
             break;
-            //return gpu_read(Addr);
         case 0x20:
             return controls_read();
         case 0x21:
@@ -101,7 +100,6 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
         case 0x01:
         case 0x02:
         case 0x03:
-            gpu_write(Addr, Value);
             break;
         case 0x23:
             timer_write(Value);
@@ -114,19 +112,19 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
             return;
         case 0x10: case 0x11: case 0x12: case 0x13:
         case 0x14: case 0x15: case 0x16: case 0x17:
-            soundport_w(((Addr & 0x4) >> 2), Addr & 3, Value);
+            sound_soundport_w(((Addr & 0x4) >> 2), Addr & 3, Value);
             break;
         case 0x28:
         case 0x29:
         case 0x2a:
-            svision_noise_w(Addr & 0x07, Value);
+            sound_noise_w(Addr & 0x07, Value);
             break;
         case 0x18:
         case 0x19:
         case 0x1a:
         case 0x1b:
         case 0x1c:
-            svision_sounddma_w(Addr & 0x07, Value);
+            sound_sounddma_w(Addr & 0x07, Value);
             break;
     }
 }
@@ -180,16 +178,17 @@ byte Rd6502(register word Addr)
     return 0xff;
 }
 
-void memorymap_load(uint8 *rom, uint32 size)
+void memorymap_load(uint8 **rom, uint32 size)
 {
     memorymap_programRomSize = size;
-    memorymap_programRom = rom;
+    memorymap_programRom = *rom;
 
     if (memorymap_programRomSize == 32768) {
         uint8 *tmp = (uint8 *)malloc(0x10000);
         memcpy(tmp + 0x0000, memorymap_programRom, 0x8000);
         memcpy(tmp + 0x8000, memorymap_programRom, 0x8000);
         free(memorymap_programRom);
+        *rom = tmp;
         memorymap_programRom = tmp;
         memorymap_programRomSize = 0x10000;
     }
@@ -223,4 +222,36 @@ uint8 *memorymap_getRegisters(void)
 uint8 *memorymap_getRomPointer(void)
 {
     return memorymap_programRom;
+}
+
+void memorymap_save_state(FILE *fp)
+{
+    fwrite(memorymap_regs,     1, 0x2000, fp);
+    fwrite(memorymap_lowerRam, 1, 0x2000, fp);
+    fwrite(memorymap_upperRam, 1, 0x2000, fp);
+
+    uint32 offset = 0;
+    offset = memorymap_lowerRomBank - memorymap_programRom;
+    fwrite(&offset, 1, sizeof(offset), fp);
+    offset = memorymap_upperRomBank - memorymap_programRom;
+    fwrite(&offset, 1, sizeof(offset), fp);
+
+    fwrite(&dma_finished, 1, sizeof(dma_finished), fp);
+    fwrite(&timer_shot,   1, sizeof(timer_shot),   fp);
+}
+
+void memorymap_load_state(FILE *fp)
+{
+    fread(memorymap_regs,     1, 0x2000, fp);
+    fread(memorymap_lowerRam, 1, 0x2000, fp);
+    fread(memorymap_upperRam, 1, 0x2000, fp);
+
+    uint32 offset = 0;
+    fread(&offset, 1, sizeof(offset), fp);
+    memorymap_lowerRomBank = memorymap_programRom + offset;
+    fread(&offset, 1, sizeof(offset), fp);
+    memorymap_upperRomBank = memorymap_programRom + offset;
+
+    fread(&dma_finished, 1, sizeof(dma_finished), fp);
+    fread(&timer_shot,   1, sizeof(timer_shot),   fp);
 }

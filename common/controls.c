@@ -23,7 +23,7 @@ void controls_state_write(uint8 type, uint8 data)
          return; 
      else 
          controls_state = 0;
-     
+
      if (type)
          controls_state |= data;
      else

@@ -167,7 +167,7 @@ unsigned char potatorLoadROM(char* filename) {
 		fread(rom_buffer, 1, rom_size, romfile);
 		fclose(romfile);
 
-		supervision_load(rom_buffer, rom_size);
+		supervision_load(&rom_buffer, rom_size);
 
 		// Compute game CRC
 		gameCRC = crc32(0, rom_buffer, rom_size);

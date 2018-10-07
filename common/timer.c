@@ -31,3 +31,15 @@ void timer_exec(uint32 cycles)
         }
     }
 }
+
+void timer_save_state(FILE *fp)
+{
+    fwrite(&timer_cycles, 1, sizeof(timer_cycles), fp);
+    fwrite(&timer_activated, 1, sizeof(timer_activated), fp);
+}
+
+void timer_load_state(FILE *fp)
+{
+    fread(&timer_cycles, 1, sizeof(timer_cycles), fp);
+    fread(&timer_activated, 1, sizeof(timer_activated), fp);
+}
