@@ -215,7 +215,7 @@ void sound_sounddma_w(int offset, int data)
     }
 }
 
-void  sound_noise_w(int offset, int data)
+void sound_noise_w(int offset, int data)
 {
     m_noise.reg[offset] = data;
     switch (offset) {

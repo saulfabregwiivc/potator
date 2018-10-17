@@ -46,7 +46,7 @@ void memorymap_init(void)
 void memorymap_reset(void)
 {
     memorymap_lowerRomBank = memorymap_programRom + 0x0000;
-    memorymap_upperRomBank = memorymap_programRom + (memorymap_programRomSize==0x10000?0xc000:0x4000);
+    memorymap_upperRomBank = memorymap_programRom + (memorymap_programRomSize == 0x10000 ? 0xc000 : 0x4000);
 
     memset(memorymap_lowerRam, 0x00, 0x2000);
     memset(memorymap_upperRam, 0x00, 0x2000);
@@ -54,6 +54,16 @@ void memorymap_reset(void)
 
     dma_finished = FALSE;
     timer_shot   = FALSE;
+}
+
+void memorymap_done(void)
+{
+    free(memorymap_lowerRam);
+    memorymap_lowerRam = NULL;
+    free(memorymap_upperRam);
+    memorymap_upperRam = NULL;
+    free(memorymap_regs);
+    memorymap_regs = NULL;
 }
 
 uint8 memorymap_registers_read(uint32 Addr)

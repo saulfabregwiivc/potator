@@ -7,11 +7,11 @@
 #include "controls.h"
 #include "memorymap.h"
 
-#ifdef GP2X
-#include "menues.h"
-#endif
-
 #include "./m6502/m6502.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void supervision_init(void);
 void supervision_reset(void);
@@ -23,7 +23,11 @@ void supervision_set_colour_scheme(int colourScheme);
 void supervision_set_ghosting(int frameCount);
 M6502 *supervision_get6502regs(void);
 
-int supervision_save_state(const char *statepath, int id);
-int supervision_load_state(const char *statepath, int id);
+BOOL supervision_save_state(const char *statePath, int id);
+BOOL supervision_load_state(const char *statePath, int id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

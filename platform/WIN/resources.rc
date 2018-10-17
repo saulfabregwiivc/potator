@@ -3,28 +3,31 @@
 #include "resource.h"
 
 MENU_PRINCIPAL MENU 
-{
+BEGIN
     POPUP "&File"
-    {
-        MENUITEM "&Open",IDM_OPEN
-        MENUITEM "&Quit",IDM_QUIT
-    }
+    BEGIN
+        MENUITEM "&Open\tCtrl+O",IDM_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",IDM_EXIT
+    END
     POPUP "&Options"
-    {
+    BEGIN
         POPUP "Screen Size"
-        {
-             MENUITEM "&1x",IDM_SIZE1 
+        BEGIN
+             MENUITEM "&1x",IDM_SIZE1
              MENUITEM "&2x",IDM_SIZE2
-             MENUITEM "&3x",IDM_SIZE3 
-             MENUITEM "&4x",IDM_SIZE4 
-        }
-    }
+             MENUITEM "&3x",IDM_SIZE3
+             MENUITEM "&4x",IDM_SIZE4
+             MENUITEM "&5x",IDM_SIZE5
+             MENUITEM "&6x",IDM_SIZE6
+        END
+    END
     POPUP "&Help"
-    {
+    BEGIN
         MENUITEM "&Website",IDM_WEBSITE
         MENUITEM "&About",IDM_ABOUT
-    }
-}
+    END
+END
 
 IDR_MAIN_ACCEL ACCELERATORS DISCARDABLE 
 BEGIN

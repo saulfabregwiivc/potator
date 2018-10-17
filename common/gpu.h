@@ -18,6 +18,7 @@ enum
 
 void gpu_init(void);
 void gpu_reset(void);
+void gpu_done(void);
 void gpu_set_colour_scheme(int colourScheme);
 void gpu_render_scanline(uint32 scanline, uint16 *backbuffer);
 void gpu_render_scanline_fast(uint32 scanline, uint16 *backbuffer);

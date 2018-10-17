@@ -15,8 +15,9 @@ void timer_write(uint8 data)
     if ((memorymap_getRegisters()[BANK] >> 4) & 1) {
         timer_cycles = d * 0x4000; // Bubble World, Eagle Plan...
     }
-    else
+    else {
         timer_cycles = d * 0x100;
+    }
     timer_activated = TRUE;
 }
 
@@ -25,7 +26,7 @@ void timer_exec(uint32 cycles)
     if (timer_activated) {
         timer_cycles -= cycles;
 
-        if (timer_cycles < 0) {
+        if (timer_cycles <= 0) { // '<' or '<='?
             timer_activated = FALSE;
             memorymap_set_timer_shot();
         }

@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
     audio_spec.format = AUDIO_F32; // Or AUDIO_S8. Problem with AUDIO_U8
     audio_spec.callback = AudioCallback;
     audio_spec.userdata = NULL;
-    OR_DIE(SDL_OpenAudio(&audio_spec, NULL) == -1);
+    OR_DIE(SDL_OpenAudio(&audio_spec, NULL) < 0);
     //SDL_AudioDeviceID devid = SDL_OpenAudioDevice(NULL, 0, &audio_spec, NULL, 0);
     //OR_DIE(devid == 0);
 

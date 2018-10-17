@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 	  {
 		 CheckKeys(); //key control
 
-		 controls_update();
+		 supervision_update_input();
 
 		 switch(currentConfig.videoMode){
 			case 0: 
@@ -197,9 +197,6 @@ int main(int argc, char *argv[])
 		 ++svFrm;*/
 
 		 gp2x_video_RGB_flip(0);
-
-
-		 controls_reset();
 	  }
 	}
 	supervision_done(); //shutsdown the system

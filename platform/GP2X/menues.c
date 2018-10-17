@@ -492,14 +492,27 @@ void handleMainMenu(void)
 			
 		if(pad & GP2X_X) {
 			switch(menuOption){
-			  case MMOPTION_CONTINUE: RESIZE(); textClear(); return;
-			  case MMOPTION_RESTART: RESIZE(); supervision_reset(); textClear(); return;
-			  case MMOPTION_SELECTOR: handleFileMenu(); return;
-			  case MMOPTION_OPTIONS: handleOptionsMenu(); textClear(); return;
-			  case MMOPTION_SAVESTATE: supervision_save_state(romname,saveSlot); textClear();return;
-			  case MMOPTION_LOADSTATE: supervision_load_state(romname,saveSlot); textClear();return;
-			  case MMOPTION_EXIT: exitMenu(); break;
-			  default: return;
+			case MMOPTION_CONTINUE: RESIZE(); textClear(); return;
+			case MMOPTION_RESTART: RESIZE(); supervision_reset(); textClear(); return;
+			case MMOPTION_SELECTOR: handleFileMenu(); return;
+			case MMOPTION_OPTIONS: handleOptionsMenu(); textClear(); return;
+			case MMOPTION_SAVESTATE: {
+				gp2x_video_RGB_flip(0);
+				supervision_save_state(romname,saveSlot);
+				sync();
+				sleep(1);
+				textClear();
+				return;
+			}
+			case MMOPTION_LOADSTATE: {
+				gp2x_video_RGB_flip(0);
+				supervision_load_state(romname,saveSlot);
+				sleep(1);
+				textClear();
+				return;
+			}
+			case MMOPTION_EXIT: exitMenu(); break;
+			default: return;
 			}
 		}
 

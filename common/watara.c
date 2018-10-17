@@ -10,10 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef GP2X
-#include "menues.h"
-#include "minimal.h"
-#endif
 #ifdef NDS
 #include <nds.h>
 #endif
@@ -56,6 +52,8 @@ void supervision_reset(void)
 
 void supervision_done(void)
 {
+    gpu_done();
+    memorymap_done();
 }
 
 BOOL supervision_load(uint8 **rom, uint32 romSize)
@@ -88,11 +86,12 @@ M6502 *supervision_get6502regs(void)
 
 void supervision_exec(uint16 *backbuffer)
 {
-    uint32 supervision_scanline, scan = 0;
+    uint32 supervision_scanline, scan;
     uint8 *m_reg = memorymap_getRegisters();
 
     for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++) {
-        m6502_registers.ICount = 512;
+        // 256 * 256 -- 1 frame (61 FPS), 256 * 256 / 160 = 409.6 cycles per line
+        m6502_registers.ICount = 410;
         timer_exec(m6502_registers.ICount);
 
         Run6502(&m6502_registers);
@@ -120,17 +119,28 @@ void supervision_exec(uint16 *backbuffer)
     sound_decrement();
 }
 
-int supervision_save_state(const char *statepath, int id)
+#define STATEPATHBUF_MAXLEN 256
+// strlen("X.svst") + 1 = 7
+#define STATEFILENAME_MAXLEN (STATEPATHBUF_MAXLEN - 7)
+
+static void get_statepath(const char *statePath, int id, char *newPath)
+{
+    int newPathLen;
+
+    newPathLen = strlen(statePath);
+    if (newPathLen > STATEFILENAME_MAXLEN) {
+        newPathLen = STATEFILENAME_MAXLEN;
+    }
+    strncpy(newPath, statePath, STATEFILENAME_MAXLEN);
+    sprintf(newPath + newPathLen, "%d.svst", id);
+}
+
+BOOL supervision_save_state(const char *statePath, int id)
 {
     FILE *fp;
-    char newPath[256];
+    char newPath[STATEPATHBUF_MAXLEN];
 
-    strcpy(newPath, statepath);
-    sprintf(newPath + strlen(newPath), ".svst");
-
-#ifdef GP2X
-    gp2x_video_RGB_flip(0);
-#endif
+    get_statepath(statePath, id, newPath);
 
     fp = fopen(newPath, "wb");
     if (fp) {
@@ -142,27 +152,19 @@ int supervision_save_state(const char *statepath, int id)
 
         fflush(fp);
         fclose(fp);
-#ifdef GP2X
-        sync();
-#endif
     }
-#ifdef GP2X
-    sleep(1);
-#endif
-    return 1;
+    else {
+        return FALSE;
+    }
+    return TRUE;
 }
 
-int supervision_load_state(const char *statepath, int id)
+BOOL supervision_load_state(const char *statePath, int id)
 {
     FILE *fp;
-    char newPath[256];
+    char newPath[STATEPATHBUF_MAXLEN];
 
-    strcpy(newPath, statepath);
-    sprintf(newPath + strlen(newPath), ".svst");
-
-#ifdef GP2X
-    gp2x_video_RGB_flip(0);
-#endif
+    get_statepath(statePath, id, newPath);
 
     fp = fopen(newPath, "rb");
     if (fp) {
@@ -176,8 +178,8 @@ int supervision_load_state(const char *statepath, int id)
 
         fclose(fp);
     }
-#ifdef GP2X
-    sleep(1);
-#endif
-    return 1;
+    else {
+        return FALSE;
+    }
+    return TRUE;
 }

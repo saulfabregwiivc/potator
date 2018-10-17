@@ -155,17 +155,13 @@ int main()
 	{
 		CheckKeys(); //key control
 
-		controls_update();
+		supervision_update_input();
 
 		supervision_exec(screenbuffer); //Execute the emulator
 //		supervision_exec_fast(screenbuffer); //Execute the emulator
 
 		for(j=0; j < 161; j++)
 			dmaCopyWordsAsynch(3, screenbuffer+(j * 160), BG_GFX+(j*256), 160*2); //copy frame buffer to screen
-
-		//Clearing Keys
-		controls_reset();
-
 	}
 	supervision_done(); //shutsdown the system
 }

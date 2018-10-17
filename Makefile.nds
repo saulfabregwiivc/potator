@@ -16,8 +16,8 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	PotatorDS
 BUILD		:=	build
-SOURCES		:=  common common/M6502 platform/NDS
-INCLUDES	:=	common common/M6502 platform/NDS
+SOURCES		:=  common common/m6502 platform/NDS
+INCLUDES	:=	common common/m6502 platform/NDS
 
 #---------------------------------------------------------------------------------
 # options for code generation

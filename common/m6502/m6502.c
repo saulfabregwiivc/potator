@@ -360,9 +360,10 @@ word Run6502(M6502 *R)
         case 0xFD: MR_Ax(I); M_SBC(I);       break; /* SBC $ssss,x ABS,x */
         case 0xFE: MM_Ax(M_INC);             break; /* INC $ssss,x ABS,x */
         default:
-            if (R->TrapBadOps)
+            /*if (R->TrapBadOps)
                 printf("[M65C02 %lX] Unrecognized instruction: $%02X at PC=$%04X\n",
-                (unsigned long)R->User, Op6502(R->PC.W - 1), (word)(R->PC.W - 1)); break;
+                (unsigned long)R->User, Op6502(R->PC.W - 1), (word)(R->PC.W - 1));*/
+            break;
         }
 
         /* If cycle counter expired... */

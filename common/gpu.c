@@ -77,6 +77,13 @@ void gpu_reset(void)
     gpu_set_ghosting(0);
 }
 
+void gpu_done(void)
+{
+    free(supervision_palette);
+    supervision_palette = NULL;
+    gpu_set_ghosting(0);
+}
+
 void gpu_set_colour_scheme(int colourScheme)
 {
     float c[12];
@@ -108,8 +115,7 @@ void gpu_render_scanline(uint32 scanline, uint16 *backbuffer)
     uint8 *vram_line = memorymap_getUpperRamPointer() + (m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30) + (scanline * 0x30);
     uint8 x;
 
-    for (x = 0; x < 160; x += 4)
-    {
+    for (x = 0; x < 160; x += 4) {
         uint8 b = *(vram_line++);
         backbuffer[3] = supervision_palette[((b >> 6) & 0x03)];
         backbuffer[2] = supervision_palette[((b >> 4) & 0x03)];
