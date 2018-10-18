@@ -69,9 +69,9 @@ BOOL supervision_update_input(void)
     return controls_update();
 }
 
-void supervision_set_colour_scheme(int colourScheme)
+void supervision_set_color_scheme(int colorScheme)
 {
-    gpu_set_colour_scheme(colourScheme);
+    gpu_set_color_scheme(colorScheme);
 }
 
 void supervision_set_ghosting(int frameCount)
@@ -97,12 +97,12 @@ void supervision_exec(uint16 *backbuffer)
         Run6502(&m6502_registers);
     }
 
-    //if (!((m_reg[BANK] >> 3) & 1)) { printf("LCD off\n"); }
-    scan = m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30;
+    //if (!((m_reg[SV_BANK] >> 3) & 1)) { printf("LCD off\n"); }
+    scan = m_reg[SV_XPOS] / 4 + m_reg[SV_YPOS] * 0x30;
     for (supervision_scanline = 0; supervision_scanline < 160; supervision_scanline++) {
 #ifdef NDS
         gpu_render_scanline(supervision_scanline, backbuffer);
-        backbuffer += 160 + 96;
+        backbuffer += 160;
 #else
         //gpu_render_scanline(supervision_scanline, backbuffer);
         gpu_render_scanline_fast(scan, backbuffer);
@@ -119,30 +119,23 @@ void supervision_exec(uint16 *backbuffer)
     sound_decrement();
 }
 
-#define STATEPATHBUF_MAXLEN 256
-// strlen("X.svst") + 1 = 7
-#define STATEFILENAME_MAXLEN (STATEPATHBUF_MAXLEN - 7)
-
-static void get_statepath(const char *statePath, int id, char *newPath)
+static void get_state_path(const char *statePath, int id, char **newPath)
 {
     int newPathLen;
-
     newPathLen = strlen(statePath);
-    if (newPathLen > STATEFILENAME_MAXLEN) {
-        newPathLen = STATEFILENAME_MAXLEN;
-    }
-    strncpy(newPath, statePath, STATEFILENAME_MAXLEN);
-    sprintf(newPath + newPathLen, "%d.svst", id);
+    *newPath = (char *)malloc(newPathLen + 1 + 6); // strlen("X.svst")
+    strcpy(*newPath, statePath);
+    sprintf(*newPath + newPathLen, "%d.svst", id);
 }
 
 BOOL supervision_save_state(const char *statePath, int id)
 {
     FILE *fp;
-    char newPath[STATEPATHBUF_MAXLEN];
+    char *newPath;
 
-    get_statepath(statePath, id, newPath);
-
+    get_state_path(statePath, id, &newPath);
     fp = fopen(newPath, "wb");
+    free(newPath);
     if (fp) {
         fwrite(&m6502_registers, 1, sizeof(m6502_registers), fp);
         fwrite(&irq, 1, sizeof(irq), fp);
@@ -162,11 +155,11 @@ BOOL supervision_save_state(const char *statePath, int id)
 BOOL supervision_load_state(const char *statePath, int id)
 {
     FILE *fp;
-    char newPath[STATEPATHBUF_MAXLEN];
+    char *newPath;
 
-    get_statepath(statePath, id, newPath);
-
+    get_state_path(statePath, id, &newPath);
     fp = fopen(newPath, "rb");
+    free(newPath);
     if (fp) {
         sound_reset();
 

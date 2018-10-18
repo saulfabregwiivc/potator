@@ -517,10 +517,10 @@ void screen_showtopmenu(void) {
 	
 	// in case of different color scheme
 	switch (GameConf.m_Color) {
-		case 0: supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT); break;
-		case 1: supervision_set_colour_scheme(COLOUR_SCHEME_AMBER); break;
-		case 2: supervision_set_colour_scheme(COLOUR_SCHEME_GREEN); break;
-		case 3: supervision_set_colour_scheme(COLOUR_SCHEME_BLUE); break;
+		case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
+		case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;
+		case 2: supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); break;
+		case 3: supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); break;
 	}
 }
 
@@ -563,10 +563,10 @@ void menuReset(void) {
 	if (cartridge_IsLoaded()) {
 		supervision_reset();
 		switch (GameConf.m_Color) {
-			case 0: supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT); break;
-			case 1: supervision_set_colour_scheme(COLOUR_SCHEME_AMBER); break;
-			case 2: supervision_set_colour_scheme(COLOUR_SCHEME_GREEN); break;
-			case 3: supervision_set_colour_scheme(COLOUR_SCHEME_BLUE); break;
+			case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
+			case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;
+			case 2: supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); break;
+			case 3: supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); break;
 		}
 		gameMenu=false;
 		m_Flag = GF_GAMERUNNING;
@@ -955,10 +955,10 @@ void system_loadcfg(char *cfg_name) {
 		SDL_Flip(actualScreen);
 	}
 	switch (GameConf.m_Color) {
-		case 0: supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT); break;
-		case 1: supervision_set_colour_scheme(COLOUR_SCHEME_AMBER); break;
-		case 2: supervision_set_colour_scheme(COLOUR_SCHEME_GREEN); break;
-		case 3: supervision_set_colour_scheme(COLOUR_SCHEME_BLUE); break;
+		case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
+		case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;
+		case 2: supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); break;
+		case 3: supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); break;
 	}
   }
   else {
@@ -975,7 +975,7 @@ void system_loadcfg(char *cfg_name) {
 		GameConf.m_ScreenRatio=1; // 0 = original show, 1 = full screen
 		GameConf.m_DisplayFPS=1; // 0 = no
 		GameConf.m_Color = 0; // default color scheme
-		supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT); 
+		supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); 
 		getcwd(GameConf.current_dir_rom, MAX__PATH);
 	}
 }

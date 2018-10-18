@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 
     SDL_AudioSpec audio_spec;
     memset(&audio_spec, 0, sizeof(audio_spec));
-    audio_spec.freq = BPS;
+    audio_spec.freq = SV_SAMPLE_RATE;
     audio_spec.channels = 2;
     audio_spec.samples = 512;
     audio_spec.format = AUDIO_S8;
@@ -318,8 +318,8 @@ void ToggleFullscreen(void)
 void NextPalette(void)
 {
     static int currentPalette = 0;
-    currentPalette = (currentPalette + 1) % COLOUR_SCHEME_COUNT;
-    supervision_set_colour_scheme(currentPalette);
+    currentPalette = (currentPalette + 1) % SV_COLOR_SCHEME_COUNT;
+    supervision_set_color_scheme(currentPalette);
 }
 
 void UpdateWindowSize(void)
@@ -354,7 +354,7 @@ void DecreaseWindowSize(void)
 
 void IncreaseGhosting(void)
 {
-    if (currentGhosting < GHOSTING_MAX) {
+    if (currentGhosting < SV_GHOSTING_MAX) {
         currentGhosting++;
         supervision_set_ghosting(currentGhosting);
     }

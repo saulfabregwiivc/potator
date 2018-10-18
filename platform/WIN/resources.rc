@@ -7,11 +7,14 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Open\tCtrl+O",IDM_OPEN
+        MENUITEM "&Load State\t2", IDM_LOAD
+        MENUITEM "&Save State\t1", IDM_SAVE
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",IDM_EXIT
+        MENUITEM "E&xit\tAlt+F4",IDM_EXIT
     END
     POPUP "&Options"
     BEGIN
+        MENUITEM "&Fullscreen\tF11",IDM_FULLSCREEN
         POPUP "Screen Size"
         BEGIN
              MENUITEM "&1x",IDM_SIZE1
@@ -25,6 +28,7 @@ BEGIN
     POPUP "&Help"
     BEGIN
         MENUITEM "&Website",IDM_WEBSITE
+        MENUITEM SEPARATOR
         MENUITEM "&About",IDM_ABOUT
     END
 END
@@ -32,4 +36,7 @@ END
 IDR_MAIN_ACCEL ACCELERATORS DISCARDABLE 
 BEGIN
     "O",            IDM_OPEN,               VIRTKEY, CONTROL, NOINVERT
+    "2",            IDM_LOAD,               VIRTKEY
+    "1",            IDM_SAVE,               VIRTKEY
+    VK_F11,         IDM_FULLSCREEN,         VIRTKEY
 END

@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define BPS 44100
+#define SV_SAMPLE_RATE 44100
 
 void sound_reset(void);
 /*!

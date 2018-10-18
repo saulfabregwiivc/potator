@@ -211,7 +211,7 @@ void LoadBuffer(void)
     if (prevState == MENUSTATE_PAUSE) { // Focus wasn't gained
         PushMenuState(MENUSTATE_PAUSE);
     }
-    supervision_set_colour_scheme(currentPalette);
+    supervision_set_color_scheme(currentPalette);
     supervision_set_ghosting(currentGhosting);
 }
 
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 
     SDL_AudioSpec audio_spec;
     SDL_zero(audio_spec);
-    audio_spec.freq = BPS;
+    audio_spec.freq = SV_SAMPLE_RATE;
     audio_spec.channels = 2;
     audio_spec.samples = 512;
     audio_spec.format = AUDIO_F32; // Or AUDIO_S8. Problem with AUDIO_U8
@@ -585,8 +585,8 @@ void Reset(void)
 
 void NextPalette(void)
 {
-    currentPalette = (currentPalette + 1) % COLOUR_SCHEME_COUNT;
-    supervision_set_colour_scheme(currentPalette);
+    currentPalette = (currentPalette + 1) % SV_COLOR_SCHEME_COUNT;
+    supervision_set_color_scheme(currentPalette);
 }
 
 void IncreaseWindowSize(void)
@@ -650,7 +650,7 @@ void MuteAudio(void)
 
 void IncreaseGhosting(void)
 {
-    if (currentGhosting < GHOSTING_MAX) {
+    if (currentGhosting < SV_GHOSTING_MAX) {
         currentGhosting++;
         supervision_set_ghosting(currentGhosting);
     }

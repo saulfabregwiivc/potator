@@ -2,7 +2,7 @@
 #define __TYPES_H__
 
 #if defined NDS
-#include <nds/jtypes.h>
+#include <nds/ndstypes.h>
 #endif
 
 #ifdef NULL
@@ -11,9 +11,12 @@
 #endif
 
 #ifndef TRUE
-#define BOOL int
 #define TRUE 1
 #define FALSE 0
+#endif
+
+#ifndef BOOL
+#define BOOL int
 #endif
 
 #if defined(_ODSDL_)
@@ -27,7 +30,7 @@
 #define int32   signed long
 //#define int64   unsigned __int64
 
-#else
+#elif !defined(NDS)
 
 typedef unsigned char           uint8;
 typedef unsigned short int      uint16;

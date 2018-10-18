@@ -171,7 +171,7 @@ void sound_soundport_w(int which, int offset, int data)
         case 1:
             size = channel->reg[0] | ((channel->reg[1] & 7) << 8);
             if (size) {
-                channel->size = (int)(BPS * (size << 5) / UNSCALED_CLOCK);
+                channel->size = (int)(SV_SAMPLE_RATE * (size << 5) / UNSCALED_CLOCK);
             }
             else {
                 channel->size = 0;
@@ -201,7 +201,7 @@ void sound_sounddma_w(int offset, int data)
             m_dma.size = (data ? data : 0x100) * 32;
             break;
         case 3:
-            m_dma.step = UNSCALED_CLOCK / (256.0 * BPS * (1 + (data & 3)));
+            m_dma.step = UNSCALED_CLOCK / (256.0 * SV_SAMPLE_RATE * (1 + (data & 3)));
             m_dma.right = data & 4;
             m_dma.left = data & 8;
             m_dma.ca14to16 = ((data & 0x70) >> 4) << 14;
@@ -221,7 +221,7 @@ void sound_noise_w(int offset, int data)
     switch (offset) {
         case 0:
             m_noise.volume = data & 0xf;
-            m_noise.step = UNSCALED_CLOCK / (256.0 * BPS * (1 + (data >> 4)));
+            m_noise.step = UNSCALED_CLOCK / (256.0 * SV_SAMPLE_RATE * (1 + (data >> 4)));
             break;
         case 1:
             m_noise.count = data + 1;

@@ -19,7 +19,7 @@ void supervision_done(void);
 void supervision_exec(uint16 *backbuffer);
 BOOL supervision_load(uint8 **rom, uint32 romSize);
 BOOL supervision_update_input(void);
-void supervision_set_colour_scheme(int colourScheme);
+void supervision_set_color_scheme(int colorScheme);
 void supervision_set_ghosting(int frameCount);
 M6502 *supervision_get6502regs(void);
 

@@ -3,9 +3,6 @@
 #ifdef GP2X
 #include "minimal.h"
 #endif
-#ifdef NDS
-#include <nds.h>
-#endif
 
 static uint8 controls_state;
 
@@ -48,15 +45,6 @@ BOOL controls_update(void)
     if (pad & GP2X_A)      controls_state|=0x20;
     if (pad & GP2X_START)  controls_state|=0x80;
     if (pad & GP2X_SELECT) controls_state|=0x40;
-#elif defined(NDS)
-    if (!(REG_KEYINPUT & KEY_RIGHT))  controls_state|=0x01;
-    if (!(REG_KEYINPUT & KEY_LEFT))   controls_state|=0x02;
-    if (!(REG_KEYINPUT & KEY_DOWN))   controls_state|=0x04;
-    if (!(REG_KEYINPUT & KEY_UP))     controls_state|=0x08;
-    if (!(REG_KEYINPUT & KEY_B))      controls_state|=0x10;
-    if (!(REG_KEYINPUT & KEY_A))      controls_state|=0x20;
-    if (!(REG_KEYINPUT & KEY_SELECT)) controls_state|=0x40;
-    if (!(REG_KEYINPUT & KEY_START))  controls_state|=0x80;
 #endif
 
     return TRUE;

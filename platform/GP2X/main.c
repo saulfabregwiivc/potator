@@ -71,16 +71,16 @@ void CheckKeys(void)
 	supervision_reset(); //Reset emulator
 
 	if(pad & GP2X_L) if(pad & GP2X_LEFT) //Checks if L and LEFT pushed
-	supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT); //Changes the color scheme
+	supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); //Changes the color scheme
 
 	if(pad & GP2X_L) if(pad & GP2X_RIGHT) //Checks if L and RIGHT are pushed
-	supervision_set_colour_scheme(COLOUR_SCHEME_AMBER); //Changes the color scheme
+	supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); //Changes the color scheme
 
 	if(pad & GP2X_L) if(pad & GP2X_UP) //Checks if L and UP pushed
-	supervision_set_colour_scheme(COLOUR_SCHEME_GREEN); //Changes the color scheme
+	supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); //Changes the color scheme
 
 	if(pad & GP2X_L) if(pad & GP2X_DOWN) //Checks if L and DOWN pushed
-	supervision_set_colour_scheme(COLOUR_SCHEME_BLUE); //Changes the color scheme
+	supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); //Changes the color scheme
 
 	if(pad & GP2X_Y) {
 	paused=TRUE;
@@ -124,16 +124,16 @@ int main(int argc, char *argv[])
 				//screen_size = 1;
 			}
 			if(strcmp(argv[i], "--color white") == 0) {
-				supervision_set_colour_scheme(COLOUR_SCHEME_DEFAULT);
+				supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT);
 			}
 			if(strcmp(argv[i], "--color amber") == 0) {
-				supervision_set_colour_scheme(COLOUR_SCHEME_AMBER);
+				supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER);
 			}
 			if(strcmp(argv[i], "--color green") == 0) {
-				supervision_set_colour_scheme(COLOUR_SCHEME_GREEN);
+				supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN);
 			}
 			if(strcmp(argv[i], "--color blue") == 0) {
-				supervision_set_colour_scheme(COLOUR_SCHEME_BLUE);
+				supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE);
 			}
 		}
 	

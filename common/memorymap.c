@@ -17,8 +17,8 @@ static BOOL timer_shot   = FALSE;
 
 static void check_irq(void)
 {
-    BOOL irq = (timer_shot && ((memorymap_regs[BANK] >> 1) & 1))
-          || (dma_finished && ((memorymap_regs[BANK] >> 2) & 1));
+    BOOL irq = (timer_shot && ((memorymap_regs[SV_BANK] >> 1) & 1))
+          || (dma_finished && ((memorymap_regs[SV_BANK] >> 2) & 1));
 
     void m6502_set_irq_line(BOOL);
     m6502_set_irq_line(irq);

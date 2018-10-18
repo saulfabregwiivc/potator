@@ -18,7 +18,7 @@
 #define RGB555(R,G,B) ((((int)(B))<<10)|(((int)(G))<<5)|(((int)(R))))
 #endif
 
-const static uint8 palettes[COLOUR_SCHEME_COUNT][12] = {
+const static uint8 palettes[SV_COLOR_SCHEME_COUNT][12] = {
 {
     252, 252, 252,
     168, 168, 168,
@@ -59,7 +59,7 @@ const static uint8 palettes[COLOUR_SCHEME_COUNT][12] = {
 
 static uint16 *supervision_palette;
 
-#define SB_MAX (GHOSTING_MAX + 1)
+#define SB_MAX (SV_GHOSTING_MAX + 1)
 static int ghostCount = 0;
 static uint8 *screenBuffers[SB_MAX];
 static uint8 screenBufferStartX[SB_MAX];
@@ -73,7 +73,7 @@ void gpu_init(void)
 
 void gpu_reset(void)
 {
-    gpu_set_colour_scheme(COLOUR_SCHEME_DEFAULT);
+    gpu_set_color_scheme(SV_COLOR_SCHEME_DEFAULT);
     gpu_set_ghosting(0);
 }
 
@@ -84,12 +84,12 @@ void gpu_done(void)
     gpu_set_ghosting(0);
 }
 
-void gpu_set_colour_scheme(int colourScheme)
+void gpu_set_color_scheme(int colorScheme)
 {
     float c[12];
     int i;
     for (i = 0; i < 12; i++) {
-        c[i] = palettes[colourScheme][i] / 255.0f;
+        c[i] = palettes[colorScheme][i] / 255.0f;
     }
 #if defined(GP2X)
     supervision_palette[3] = gp2x_video_RGB_color16(255*c[9],255*c[10],255*c[11]);
@@ -112,7 +112,7 @@ void gpu_set_colour_scheme(int colourScheme)
 void gpu_render_scanline(uint32 scanline, uint16 *backbuffer)
 {
     uint8 *m_reg = memorymap_getRegisters();
-    uint8 *vram_line = memorymap_getUpperRamPointer() + (m_reg[XPOS] / 4 + m_reg[YPOS] * 0x30) + (scanline * 0x30);
+    uint8 *vram_line = memorymap_getUpperRamPointer() + (m_reg[SV_XPOS] / 4 + m_reg[SV_YPOS] * 0x30) + (scanline * 0x30);
     uint8 x;
 
     for (x = 0; x < 160; x += 4) {
@@ -131,8 +131,8 @@ void gpu_render_scanline_fast(uint32 scanline, uint16 *backbuffer)
     uint8 x, j, b;
 
     uint8 *m_reg = memorymap_getRegisters();
-    uint8 start_x = m_reg[XPOS] & 3; //3 - (m_reg[XPOS] & 3);
-    uint8 end_x = (163 < (m_reg[XSIZE] | 3) ? 163 : (m_reg[XSIZE] | 3)) - 3; //(163 < (m_reg[XSIZE] | 3) ? 163 : (m_reg[XSIZE] | 3));
+    uint8 start_x = m_reg[SV_XPOS] & 3; //3 - (m_reg[SV_XPOS] & 3);
+    uint8 end_x = (163 < (m_reg[SV_XSIZE] | 3) ? 163 : (m_reg[SV_XSIZE] | 3)) - 3; //(163 < (m_reg[SV_XSIZE] | 3) ? 163 : (m_reg[SV_XSIZE] | 3));
     //if (start_x != 0) printf("start_x = %u\n", start_x);
     //if (end_x != 160) printf("end_x = %u\n", end_x);
     j = start_x;
@@ -165,8 +165,8 @@ void gpu_set_ghosting(int frameCount)
     int i;
     if (frameCount < 0)
         ghostCount = 0;
-    else if (frameCount > GHOSTING_MAX)
-        ghostCount = GHOSTING_MAX;
+    else if (frameCount > SV_GHOSTING_MAX)
+        ghostCount = SV_GHOSTING_MAX;
     else
         ghostCount = frameCount;
 
