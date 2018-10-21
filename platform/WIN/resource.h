@@ -17,8 +17,9 @@
 #define IDM_SIZE6           112
 
 #define IDM_FULLSCREEN      113
+#define IDM_CONTROL_CONFIG  114
 
-#define IDM_GHOSTING        114
+#define IDM_GHOSTING        115
 #define IDM_PALETTE         (IDM_GHOSTING + SV_GHOSTING_MAX + 1)
 
 #endif

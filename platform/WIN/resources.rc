@@ -6,7 +6,7 @@ MENU_PRINCIPAL MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open\tCtrl+O",IDM_OPEN
+        MENUITEM "&Open ROM...\tCtrl+O",IDM_OPEN
         MENUITEM "&Load State\t2", IDM_LOAD
         MENUITEM "&Save State\t1", IDM_SAVE
         MENUITEM SEPARATOR
@@ -24,6 +24,7 @@ BEGIN
              MENUITEM "&5x",IDM_SIZE5
              MENUITEM "&6x",IDM_SIZE6
         END
+        MENUITEM "&Control Config...\tCtrl+I",IDM_CONTROL_CONFIG
     END
     POPUP "&Help"
     BEGIN
@@ -35,8 +36,10 @@ END
 
 IDR_MAIN_ACCEL ACCELERATORS DISCARDABLE 
 BEGIN
-    "O",            IDM_OPEN,               VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "2",            IDM_LOAD,               VIRTKEY
     "1",            IDM_SAVE,               VIRTKEY
     VK_F11,         IDM_FULLSCREEN,         VIRTKEY
+    VK_RETURN,      IDM_FULLSCREEN,         VIRTKEY, ALT
+    "I",            IDM_CONTROL_CONFIG,     VIRTKEY, CONTROL
 END
