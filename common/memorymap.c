@@ -1,26 +1,31 @@
 #include "memorymap.h"
+
+#include "controls.h"
 #include "sound.h"
+#include "timer.h"
+#include "./m6502/m6502.h"
+
 #include <stdlib.h>
 #include <string.h>
 
-uint8 *memorymap_programRom;
-uint8 *memorymap_lowerRam;
-uint8 *memorymap_upperRam;
-uint8 *memorymap_lowerRomBank;
-uint8 *memorymap_upperRomBank;
-uint8 *memorymap_regs;
+static uint8 *lowerRam;
+static uint8 *upperRam;
+static uint8 *regs;
+static const uint8 *programRom;
+static const uint8 *lowerRomBank;
+static const uint8 *upperRomBank;
 
-static uint32 memorymap_programRomSize;
+static uint32 programRomSize;
 
 static BOOL dma_finished = FALSE;
 static BOOL timer_shot   = FALSE;
 
 static void check_irq(void)
 {
-    BOOL irq = (timer_shot && ((memorymap_regs[SV_BANK] >> 1) & 1))
-          || (dma_finished && ((memorymap_regs[SV_BANK] >> 2) & 1));
+    BOOL irq = (timer_shot && ((regs[SV_BANK] >> 1) & 1))
+          || (dma_finished && ((regs[SV_BANK] >> 2) & 1));
 
-    void m6502_set_irq_line(BOOL);
+    void m6502_set_irq_line(BOOL); // watara.c
     m6502_set_irq_line(irq);
 }
 
@@ -38,19 +43,28 @@ void memorymap_set_timer_shot(void)
 
 void memorymap_init(void)
 {
-    memorymap_lowerRam = (uint8*)malloc(0x2000);
-    memorymap_upperRam = (uint8*)malloc(0x2000);
-    memorymap_regs     = (uint8*)malloc(0x2000);
+    lowerRam = (uint8*)malloc(0x2000);
+    upperRam = (uint8*)malloc(0x2000);
+    regs     = (uint8*)malloc(0x2000);
 }
 
 void memorymap_reset(void)
 {
-    memorymap_lowerRomBank = memorymap_programRom + 0x0000;
-    memorymap_upperRomBank = memorymap_programRom + (memorymap_programRomSize == 0x10000 ? 0xc000 : 0x4000);
+    lowerRomBank = programRom + 0x0000;
+    //  size -> upperRomBank:
+    //  16KB ->   0KB (min in theory)
+    //  32KB ->  16KB (min in practice)
+    //  48KB ->  32KB
+    //  64KB ->  48KB (max in practice)
+    //  80KB ->  64KB
+    //  96KB ->  80KB
+    // 112KB ->  96KB
+    // 128KB -> 112KB (max in theory)
+    upperRomBank = programRom + (programRomSize - 0x4000);
 
-    memset(memorymap_lowerRam, 0x00, 0x2000);
-    memset(memorymap_upperRam, 0x00, 0x2000);
-    memset(memorymap_regs,     0x00, 0x2000);
+    memset(lowerRam, 0x00, 0x2000);
+    memset(upperRam, 0x00, 0x2000);
+    memset(regs,     0x00, 0x2000);
 
     dma_finished = FALSE;
     timer_shot   = FALSE;
@@ -58,17 +72,14 @@ void memorymap_reset(void)
 
 void memorymap_done(void)
 {
-    free(memorymap_lowerRam);
-    memorymap_lowerRam = NULL;
-    free(memorymap_upperRam);
-    memorymap_upperRam = NULL;
-    free(memorymap_regs);
-    memorymap_regs = NULL;
+    free(lowerRam); lowerRam = NULL;
+    free(upperRam); upperRam = NULL;
+    free(regs);     regs     = NULL;
 }
 
 uint8 memorymap_registers_read(uint32 Addr)
 {
-    uint8 data = memorymap_regs[Addr & 0x1fff];
+    uint8 data = regs[Addr & 0x1fff];
     switch (Addr & 0x1fff) {
         case 0x00:
         case 0x01:
@@ -79,7 +90,7 @@ uint8 memorymap_registers_read(uint32 Addr)
             return controls_read();
         case 0x21:
             data &= ~0xf;
-            data |= memorymap_regs[0x22] & 0xf;
+            data |= regs[0x22] & 0xf;
             break;
         case 0x24:
             timer_shot = FALSE;
@@ -104,7 +115,7 @@ uint8 memorymap_registers_read(uint32 Addr)
 
 void memorymap_registers_write(uint32 Addr, uint8 Value)
 {
-    memorymap_regs[Addr & 0x1fff] = Value;
+    regs[Addr & 0x1fff] = Value;
     switch (Addr & 0x1fff) {
         case 0x00:
         case 0x01:
@@ -115,9 +126,7 @@ void memorymap_registers_write(uint32 Addr, uint8 Value)
             timer_write(Value);
             break;
         case 0x26:
-            //printf("memorymap: writing 0x%.2x to rom bank register\n", Value);
-            memorymap_lowerRomBank = memorymap_programRom + ((((uint32)Value) & 0x60) << 9);
-            memorymap_upperRomBank = memorymap_programRom + (memorymap_programRomSize == 0x10000 ? 0xc000 : 0x4000);
+            lowerRomBank = programRom + ((Value & 0xe0) << 9) % programRomSize;
             check_irq();
             return;
         case 0x10: case 0x11: case 0x12: case 0x13:
@@ -145,7 +154,7 @@ void Wr6502(register word Addr, register byte Value)
     switch (Addr >> 12) {
         case 0x0:
         case 0x1:
-            memorymap_lowerRam[Addr] = Value;
+            lowerRam[Addr] = Value;
             return;
         case 0x2:
         case 0x3:
@@ -153,7 +162,7 @@ void Wr6502(register word Addr, register byte Value)
             return;
         case 0x4:
         case 0x5:
-            memorymap_upperRam[Addr & 0x1fff] = Value;
+            upperRam[Addr & 0x1fff] = Value;
             return;
     }
 }
@@ -164,104 +173,94 @@ byte Rd6502(register word Addr)
     switch (Addr >> 12) {
         case 0x0:
         case 0x1:
-            return memorymap_lowerRam[Addr];
+            return lowerRam[Addr];
         case 0x2:
         case 0x3:
             return memorymap_registers_read(Addr);
         case 0x4:
         case 0x5:
-            return memorymap_upperRam[Addr & 0x1fff];
+            return upperRam[Addr & 0x1fff];
         case 0x6:
         case 0x7:
-            return memorymap_programRom[Addr & 0x1fff];
+            return programRom[Addr & 0x1fff];
         case 0x8:
         case 0x9:
         case 0xa:
         case 0xb:
-            return memorymap_lowerRomBank[Addr & 0x3fff];
+            return lowerRomBank[Addr & 0x3fff];
         case 0xc:
         case 0xd:
         case 0xe:
         case 0xf:
-            return memorymap_upperRomBank[Addr & 0x3fff];
+            return upperRomBank[Addr & 0x3fff];
     }
     return 0xff;
 }
 
-void memorymap_load(uint8 **rom, uint32 size)
+BOOL memorymap_load(const uint8 *rom, uint32 size)
 {
-    memorymap_programRomSize = size;
-    memorymap_programRom = *rom;
-
-    if (memorymap_programRomSize == 32768) {
-        uint8 *tmp = (uint8 *)malloc(0x10000);
-        memcpy(tmp + 0x0000, memorymap_programRom, 0x8000);
-        memcpy(tmp + 0x8000, memorymap_programRom, 0x8000);
-        free(memorymap_programRom);
-        *rom = tmp;
-        memorymap_programRom = tmp;
-        memorymap_programRomSize = 0x10000;
+    if ((size & 0x3fff) || size == 0 || rom == NULL) {
+        return FALSE;
     }
-}
-
-uint8 *memorymap_getUpperRamPointer(void)
-{
-    return memorymap_upperRam;
-}
-
-uint8 *memorymap_getLowerRamPointer(void)
-{
-    return memorymap_lowerRam;
-}
-
-uint8 *memorymap_getUpperRomBank(void)
-{
-    return memorymap_upperRomBank;
-}
-
-uint8 *memorymap_getLowerRomBank(void)
-{
-    return memorymap_lowerRomBank;
-}
-
-uint8 *memorymap_getRegisters(void)
-{
-    return memorymap_regs;
-}
-
-uint8 *memorymap_getRomPointer(void)
-{
-    return memorymap_programRom;
+    programRomSize = size;
+    programRom = rom;
+    return TRUE;
 }
 
 void memorymap_save_state(FILE *fp)
 {
-    fwrite(memorymap_regs,     1, 0x2000, fp);
-    fwrite(memorymap_lowerRam, 1, 0x2000, fp);
-    fwrite(memorymap_upperRam, 1, 0x2000, fp);
+    uint8 ibank = 0;
+    fwrite(regs,     0x2000, 1, fp);
+    fwrite(lowerRam, 0x2000, 1, fp);
+    fwrite(upperRam, 0x2000, 1, fp);
 
-    uint32 offset = 0;
-    offset = memorymap_lowerRomBank - memorymap_programRom;
-    fwrite(&offset, 1, sizeof(offset), fp);
-    offset = memorymap_upperRomBank - memorymap_programRom;
-    fwrite(&offset, 1, sizeof(offset), fp);
+    ibank = (lowerRomBank - programRom) / 0x4000;
+    fwrite(&ibank, sizeof(ibank), 1, fp);
 
-    fwrite(&dma_finished, 1, sizeof(dma_finished), fp);
-    fwrite(&timer_shot,   1, sizeof(timer_shot),   fp);
+    fwrite(&dma_finished, sizeof(dma_finished), 1, fp);
+    fwrite(&timer_shot,   sizeof(timer_shot),   1, fp);
 }
 
 void memorymap_load_state(FILE *fp)
 {
-    fread(memorymap_regs,     1, 0x2000, fp);
-    fread(memorymap_lowerRam, 1, 0x2000, fp);
-    fread(memorymap_upperRam, 1, 0x2000, fp);
+    uint8 ibank = 0;
+    fread(regs,     0x2000, 1, fp);
+    fread(lowerRam, 0x2000, 1, fp);
+    fread(upperRam, 0x2000, 1, fp);
 
-    uint32 offset = 0;
-    fread(&offset, 1, sizeof(offset), fp);
-    memorymap_lowerRomBank = memorymap_programRom + offset;
-    fread(&offset, 1, sizeof(offset), fp);
-    memorymap_upperRomBank = memorymap_programRom + offset;
+    fread(&ibank, sizeof(ibank), 1, fp);
+    lowerRomBank = programRom + ibank * 0x4000;
 
-    fread(&dma_finished, 1, sizeof(dma_finished), fp);
-    fread(&timer_shot,   1, sizeof(timer_shot),   fp);
+    fread(&dma_finished, sizeof(dma_finished), 1, fp);
+    fread(&timer_shot,   sizeof(timer_shot),   1, fp);
+}
+
+uint8 *memorymap_getLowerRamPointer(void)
+{
+    return lowerRam;
+}
+
+uint8 *memorymap_getUpperRamPointer(void)
+{
+    return upperRam;
+}
+
+uint8 *memorymap_getRegisters(void)
+{
+    return regs;
+}
+
+const uint8 *memorymap_getRomPointer(void)
+{
+    return programRom;
+}
+
+const uint8 *memorymap_getLowerRomBank(void)
+{
+    return lowerRomBank;
+}
+
+const uint8 *memorymap_getUpperRomBank(void)
+{
+    return upperRomBank;
 }

@@ -21,23 +21,19 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include "resource.h"
 #include "../../common/supervision.h"
-#include "../../common/sound.h"
-
-#define SCREEN_W 160
-#define SCREEN_H 160
 
 #ifdef TERRIBLE_AUDIO_IMPLEMENTATION
 WAVEHDR whdr;
 HWAVEOUT hWaveOut;
-// 44100 / 60 * 2 (channels) * 2 (16-bit)
+// 44100 / FPS * 2 (channels) * 2 (16-bit)
 #define BUFFER_SIZE 2940
-int8 audioBuffer[BUFFER_SIZE];
+INT8 audioBuffer[BUFFER_SIZE];
 #endif
 
 volatile BOOL finished = FALSE;
 volatile BOOL execute = FALSE;
 
-LPCTSTR szClassName = _T("Potator");
+LPCTSTR szClassName = _T("Potator (WinAPI)");
 #define WINDOW_STYLE (WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION | WS_VISIBLE)
 #define WINDOW_EX_STYLE (WS_EX_CLIENTEDGE)
 
@@ -49,10 +45,10 @@ DWORD threadID;
 HANDLE runthread = INVALID_HANDLE_VALUE;
 
 char romName[MAX_PATH];
-uint8 *buffer;
-uint32 bufferSize = 0;
-uint8 windowScale = 2;
-uint16 screenBuffer[SCREEN_W * SCREEN_H];
+UINT8 *buffer;
+UINT32 bufferSize = 0;
+UINT8 windowScale = 2;
+UINT16 screenBuffer[SV_W * SV_H];
 
 int keysMapping[] = {
       VK_RIGHT
@@ -76,8 +72,8 @@ LPCTSTR keysNames[] = {
 };
 
 #define UPDATE_RATE 60
-uint64 startCounter;
-uint64 freq;
+UINT64 startCounter;
+UINT64 freq;
 
 void InitCounter(void)
 {
@@ -92,7 +88,7 @@ BOOL NeedUpdate(void)
 
     // New frame
     if (!result) {
-        uint64 now;
+        UINT64 now;
         QueryPerformanceCounter((LARGE_INTEGER*)&now);
         elapsedCounter += (double)((now - startCounter) * 1000) / freq;
         startCounter = now;
@@ -109,9 +105,9 @@ DWORD WINAPI run(LPVOID lpParameter)
 {
     BITMAPV4HEADER bmi = { 0 };
     TCHAR txt[64];
-    uint64 curticks = 0;
-    uint64 fpsticks = 0;
-    uint16 fpsframecount = 0;
+    UINT64 curticks = 0;
+    UINT64 fpsticks = 0;
+    UINT16 fpsframecount = 0;
 
     HANDLE hTimer;
     LARGE_INTEGER dueTime = { 0 };
@@ -126,31 +122,30 @@ DWORD WINAPI run(LPVOID lpParameter)
     bmi.bV4RedMask   = 0x001F;
     bmi.bV4GreenMask = 0x03E0;
     bmi.bV4BlueMask  = 0x7C00;
-    bmi.bV4Width  =  SCREEN_W;
-    bmi.bV4Height = -SCREEN_H;
+    bmi.bV4Width  =  SV_W;
+    bmi.bV4Height = -SV_H;
 
     while (!finished) {
         InitCounter();
         while (execute) {
-            uint8 controls_state = 0;
+            UINT8 controls_state = 0;
 
             for (int i = 0; i < 8; i++) {
                 if (GetAsyncKeyState(keysMapping[i]) & 0x8000)
                     controls_state |= 1 << i;
             }
 
-            controls_state_write(0, controls_state);
+            supervision_set_input(controls_state);
 
             while (NeedUpdate()) {
                 supervision_exec(screenBuffer);
 
 #ifdef TERRIBLE_AUDIO_IMPLEMENTATION
-                sound_stream_update(audioBuffer, BUFFER_SIZE / 2);
-                int16* b = (int16*)audioBuffer;
-                uint8* src = ((uint8*)audioBuffer) + BUFFER_SIZE / 2 - 1;
+                supervision_update_sound(audioBuffer, BUFFER_SIZE / 2);
+                INT16* dst = (INT16*)audioBuffer;
+                UINT8* src = (UINT8*)audioBuffer;
                 for (int i = BUFFER_SIZE / 2 - 1; i >= 0; i--) {
-                    b[i] = ((int16)*src) << (8 + 1);
-                    src--;
+                    dst[i] = src[i] << 8;
                 }
                 waveOutPrepareHeader(hWaveOut, &whdr, sizeof(whdr));
                 waveOutWrite(hWaveOut, &whdr, sizeof(whdr));
@@ -163,7 +158,7 @@ DWORD WINAPI run(LPVOID lpParameter)
                 if (fpsticks + freq < curticks)
                     fpsticks = curticks; // Initial value
                 if (curticks >= fpsticks) {
-                    _stprintf(txt, _T("%s (FPS: %d)"), szClassName, fpsframecount);
+                    _sntprintf_s(txt, _countof(txt), _TRUNCATE , _T("%s [FPS: %d]"), szClassName, fpsframecount);
                     SetWindowText(hWindow, txt);
                     fpsframecount = 0;
                     fpsticks += freq;
@@ -175,11 +170,11 @@ DWORD WINAPI run(LPVOID lpParameter)
                 LONG y = 0, h = r.bottom - r.top;
                 if (w != h) {
                     // Center
-                    LONG size = h / SCREEN_H * SCREEN_H;
+                    LONG size = h / SV_H * SV_H;
                     x = (w - size) / 2; w = size;
                     y = (h - size) / 2; h = size;
                 }
-                StretchDIBits(hDC, x, y, w, h, 0, 0, SCREEN_W, SCREEN_H, screenBuffer, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, SRCCOPY);
+                StretchDIBits(hDC, x, y, w, h, 0, 0, SV_W, SV_H, screenBuffer, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, SRCCOPY);
             }
 
             WaitForSingleObject(hTimer, INFINITE);
@@ -195,7 +190,7 @@ void SetRomName(LPCTSTR path)
 #ifdef UNICODE
     WideCharToMultiByte(CP_UTF8, 0, PathFindFileName(path), -1, romName, MAX_PATH, NULL, NULL);
 #else
-    strcpy(romName, PathFindFileName(path));
+    strcpy_s(romName, sizeof(romName), PathFindFileName(path));
 #endif
 }
 
@@ -212,7 +207,7 @@ int LoadROM(LPCTSTR fileName)
         return 1;
     }
     bufferSize = GetFileSize(hFile, NULL);
-    buffer = (uint8 *)malloc(bufferSize);
+    buffer = (UINT8 *)malloc(bufferSize);
     ReadFile(hFile, buffer, bufferSize, &dwTemp, NULL);
     if (bufferSize != dwTemp) {
         CloseHandle(hFile);
@@ -228,7 +223,7 @@ void UpdatePalette(void);
 
 void LoadBuffer(void)
 {
-    supervision_load(&buffer, bufferSize);
+    supervision_load(buffer, bufferSize);
     UpdateGhosting();
     UpdatePalette();
 }
@@ -248,7 +243,7 @@ void UpdateWindowSize(void)
 {
     CheckMenuRadioItem(hMenu, IDM_SIZE1, IDM_SIZE6, IDM_SIZE1 + windowScale - 1, MF_BYCOMMAND);
     RECT r;
-    SetRect(&r, 0, 0, SCREEN_W * windowScale, SCREEN_H * windowScale);
+    SetRect(&r, 0, 0, SV_W * windowScale, SV_H * windowScale);
     AdjustWindowRectEx(&r, WINDOW_STYLE, TRUE, WINDOW_EX_STYLE);
     SetWindowPos(hWindow, NULL, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE | SWP_NOZORDER | SWP_SHOWWINDOW);
 }
@@ -275,10 +270,10 @@ void InitMenu(void)
     for (int i = 0; i < SV_GHOSTING_MAX + 1; i++) {
         TCHAR buf[16];
         if (i == 0) {
-            _stprintf(buf, _T("Off"));
+            _sntprintf_s(buf, _countof(buf), _TRUNCATE, _T("Off"));
         }
         else {
-            _stprintf(buf, _T("%d frame%s"), i, (i > 1 ? _T("s") : _T("")));
+            _sntprintf_s(buf, _countof(buf), _TRUNCATE, _T("%d frame%s"), i, (i > 1 ? _T("s") : _T("")));
         }
         AppendMenu(hMenuGhosting, MF_STRING, IDM_GHOSTING + i, buf);
     }
@@ -289,7 +284,7 @@ void InitMenu(void)
     HMENU hMenuPalette = CreateMenu();
     for (int i = 0; i < SV_COLOR_SCHEME_COUNT; i++) {
         TCHAR buf[2];
-        _stprintf(buf, _T("%d"), i);
+        _sntprintf_s(buf, _countof(buf), _TRUNCATE, _T("%d"), i);
         AppendMenu(hMenuPalette, MF_STRING, IDM_PALETTE + i, buf);
     }
     InsertMenu(hMenuOptions, 3, MF_POPUP | MF_BYPOSITION, (UINT_PTR)hMenuPalette, _T("Palette"));
@@ -324,7 +319,7 @@ void ToggleFullscreen(void)
         SetWindowLongPtr(hWindow, GWL_EXSTYLE, 0);
         int w = GetSystemMetrics(SM_CXSCREEN);
         int h = GetSystemMetrics(SM_CYSCREEN);
-        // SWP_NOOWNERZORDER - prevent showing child windows on top
+        // SWP_NOOWNERZORDER - prevents showing child windows on top
         SetWindowPos(hWindow, HWND_TOP, 0, 0, w, h, SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
         SetMenu(hWindow, NULL);
         ShowCursor(FALSE);
@@ -387,6 +382,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
+        case IDM_RESET:
+            LoadBuffer();
+            break;
         case IDM_SAVE:
             if (buffer) {
                 StopEmulation();
@@ -405,7 +403,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             ShellExecute(NULL, _T("open"), _T("https://github.com/infval/potator"), NULL, NULL, SW_SHOWNORMAL);
             break;
         case IDM_ABOUT:
-            MessageBox(NULL, _T("Potator 1.0 (fork)"), szClassName, MB_ICONEXCLAMATION | MB_OK);
+        {
+            TCHAR title[64] = { 0 };
+            _sntprintf_s(title, _countof(title), _TRUNCATE, _T("Potator (WinAPI) %u.%u.%u (core: %u.%u.%u)"),
+                1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+            MessageBox(NULL, title, szClassName, MB_ICONEXCLAMATION | MB_OK);
+        }
             break;
         case IDM_FULLSCREEN:
             ToggleFullscreen();

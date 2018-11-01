@@ -15,8 +15,9 @@
 
 static byte Cycles[256] =
 {
-//https://github.com/mamedev/historic-mess/blob/master/src/emu/cpu/m6502/t6502.c
-//https://github.com/mamedev/historic-mess/blob/master/src/emu/cpu/m6502/t65c02.c
+/* https://github.com/mamedev/historic-mess/blob/master/src/emu/cpu/m6502/t6502.c
+   https://github.com/mamedev/historic-mess/blob/master/src/emu/cpu/m6502/t65c02.c
+*/
     7,6,2,2,3,3,5,5,3,2,2,2,2,4,6,5,
     2,5,3,2,3,4,6,5,2,4,2,2,4,4,7,5,
     6,6,2,2,3,3,5,5,4,2,2,2,4,4,6,5,

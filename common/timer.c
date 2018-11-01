@@ -1,5 +1,7 @@
 #include "timer.h"
 
+#include "memorymap.h"
+
 static int32 timer_cycles;
 static BOOL  timer_activated;
 
@@ -26,7 +28,7 @@ void timer_exec(uint32 cycles)
     if (timer_activated) {
         timer_cycles -= cycles;
 
-        if (timer_cycles <= 0) { // '<' or '<='?
+        if (timer_cycles <= 0) {
             timer_activated = FALSE;
             memorymap_set_timer_shot();
         }
@@ -35,12 +37,12 @@ void timer_exec(uint32 cycles)
 
 void timer_save_state(FILE *fp)
 {
-    fwrite(&timer_cycles, 1, sizeof(timer_cycles), fp);
-    fwrite(&timer_activated, 1, sizeof(timer_activated), fp);
+    fwrite(&timer_cycles, sizeof(timer_cycles), 1, fp);
+    fwrite(&timer_activated, sizeof(timer_activated), 1, fp);
 }
 
 void timer_load_state(FILE *fp)
 {
-    fread(&timer_cycles, 1, sizeof(timer_cycles), fp);
-    fread(&timer_activated, 1, sizeof(timer_activated), fp);
+    fread(&timer_cycles, sizeof(timer_cycles), 1, fp);
+    fread(&timer_activated, sizeof(timer_activated), 1, fp);
 }

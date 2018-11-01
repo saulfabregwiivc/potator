@@ -152,6 +152,11 @@ void initSDL(void) {
 	Ainit();
 }
 
+uint16 mapRGB(uint8 r, uint8 g, uint8 b)
+{
+	return PIX_TO_RGB(actualScreen->format, r, g, b);
+}
+
 unsigned char potatorLoadROM(char* filename) {
 	unsigned int length;
 
@@ -167,7 +172,8 @@ unsigned char potatorLoadROM(char* filename) {
 		fread(rom_buffer, 1, rom_size, romfile);
 		fclose(romfile);
 
-		supervision_load(&rom_buffer, rom_size);
+		supervision_load(rom_buffer, rom_size);
+		supervision_set_map_func(mapRGB);
 
 		// Compute game CRC
 		gameCRC = crc32(0, rom_buffer, rom_size);
@@ -263,7 +269,7 @@ int main(int argc, char *argv[]) {
 				}
 				else if ( (keys[SDLK_RETURN] == SDL_PRESSED) ) controls_state |=  keyCoresp[GameConf.OD_Joy[10]]; // START
 				else if ( (keys[SDLK_ESCAPE] == SDL_PRESSED) )  controls_state |=  keyCoresp[GameConf.OD_Joy[11]]; // SELECT
-				controls_state_write(0, controls_state);
+				supervision_set_input(controls_state);
 
 				// Update emulation
 				supervision_exec(XBuf);

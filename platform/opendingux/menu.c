@@ -562,6 +562,7 @@ void findNextFilename(char *szFileFormat, char *szFilename) {
 void menuReset(void) {
 	if (cartridge_IsLoaded()) {
 		supervision_reset();
+		supervision_set_map_func(mapRGB);
 		switch (GameConf.m_Color) {
 			case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
 			case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;

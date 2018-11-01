@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Emscripten-Generated Code</title>
+    <title>Potator</title>
     <style>
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       textarea.emscripten { font-family: monospace; width: 80%; }
@@ -82,6 +82,7 @@
       }
 
       #fileb {
+        display: block;
         background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAMAAABcOc2zAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAB5QTFRFvALakJCQ2gIFAjraHtoC+MBI8IgAgq7I+Kgw////JqDhkgAAAAp0Uk5T////////////ALLMLM8AAABJSURBVHjaXI5BDoAwDMPC2s3t/z+MADFafLSiJJrRmFqzsbSCQlxijOHuhkl6BDhuZnoT7MQnuEXpoHb8VujHUHaRSo4CeQowALRTBDws+boxAAAAAElFTkSuQmCC');
       }
 
@@ -163,7 +164,7 @@
       .tooltip .tooltipaudio {
         visibility: hidden;
         width: 120px;
-        background-color: #4449;
+        background-color: rgba(68, 68, 68, 0.6);
         color: #fff;
         text-align: center;
         border-radius: 6px;
@@ -406,7 +407,7 @@
     <div class="emscripten" style="text-align: left; width: 640px; margin: 3px auto;">
       <div class="tooltip" style="vertical-align: top;">
         <label>
-          <div id="fileb" class="main-button"></div>
+          <span id="fileb" class="main-button"></span>
           <input type="file" onchange="onChange(event)" accept=".bin, .sv, .ws" style="display: none;">
         </label>
         <span class="tooltiptext">Load ROM</span>
@@ -453,7 +454,7 @@
         <tr>
           <th>Action</th>
           <th>Keyboard</th>
-          <th>Gamepad</th>
+          <th>Gamepad <span class="tooltip tooltipinfo">!<span class="tooltiptext" style="width: 360px; font-weight: normal;">Some gamepads have the wrong button mapping in Firefox.</span></span></th>
         </tr>
         <tr>
           <td>Right</td>
@@ -496,8 +497,8 @@
           <td>Start / <span class="ps-start"></span></td>
         </tr>
         <tr>
-          <td></td>
-          <td><span class="keyName"></span></td>
+          <td>Fullscreen</td>
+          <td>Mouse Double-Click<span class="keyName"></span></td>
           <td></td>
         </tr>
         <tr>
@@ -551,8 +552,10 @@
       <div style="margin: 10px auto;">
         <button onclick="refreshSavestates()">Refresh</button>
         <div style="display: inline;">
-          <label for="ss_upload"><button onclick="parentNode.click()">Upload</button></label>
-          <input type="file" id="ss_upload" onchange="uploadSavestate(event)" style="display: none;">
+          <button onclick="this.nextElementSibling.click()">Upload</button>
+          <label>
+            <input type="file" onchange="uploadSavestate(event)" style="display: none;">
+          </label>
         </div>
         <!-- Lost preview-img's hover -->
         <div style="position: absolute; height: 10px; width: 80px; z-index: 1;"></div>
@@ -566,7 +569,7 @@
     <div class="emscripten"><progress value="0" max="100" id="progress" style="display: none;"></progress></div>
     <textarea class="emscripten" id="output" rows="8" style="display: none;"></textarea>
 
-    <script type='text/javascript'>
+    <script>
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');

@@ -33,13 +33,10 @@
 typedef int bool;
 
 #define PIX_TO_RGB(fmt, r, g, b) (((r>>fmt->Rloss)<<fmt->Rshift)| ((g>>fmt->Gloss)<<fmt->Gshift)|((b>>fmt->Bloss)<<fmt->Bshift))
+extern uint16 mapRGB(uint8 r, uint8 g, uint8 b);
 
 // potator dependencies
-#include "../../common/sound.h"
-#include "../../common/memorymap.h"
 #include "../../common/supervision.h"
-#include "../../common/controls.h"
-#include "../../common/types.h"
 
 #define cartridge_IsLoaded() (strlen(gameName) != 0)
 

@@ -1,4 +1,10 @@
 #include "sound.h"
+
+#include "memorymap.h"
+#include "./m6502/m6502.h"
+
+#include "supervision.h" // SV_SAMPLE_RATE
+
 #include <string.h>
 
 #define UNSCALED_CLOCK 4000000
@@ -236,4 +242,18 @@ void sound_noise_w(int offset, int data)
             break;
     }
     m_noise.pos = 0.0;
+}
+
+void sound_save_state(FILE *fp)
+{
+    fwrite(m_channel, sizeof(SVISION_CHANNEL), 2, fp);
+    fwrite(&m_noise,  sizeof(m_noise),         1, fp);
+    fwrite(&m_dma,    sizeof(m_dma),           1, fp);
+}
+
+void sound_load_state(FILE *fp)
+{
+    fread(m_channel, sizeof(SVISION_CHANNEL), 2, fp);
+    fread(&m_noise,  sizeof(m_noise),         1, fp);
+    fread(&m_dma,    sizeof(m_dma),           1, fp);
 }

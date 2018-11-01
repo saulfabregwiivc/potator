@@ -13,7 +13,6 @@
 #endif
 
 #include "../../common/supervision.h"
-#include "../../common/sound.h"
 
 #define OR_DIE(cond) \
     if (cond) { \
@@ -23,8 +22,7 @@
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-#define SCREEN_W 160
-#define SCREEN_H 160
+#define UPDATE_RATE 60
 
 typedef enum {
     MENUSTATE_NONE,
@@ -35,13 +33,13 @@ typedef enum {
 } MenuState;
 
 SDL_bool done = SDL_FALSE;
-uint16_t screenBuffer[SCREEN_W * SCREEN_H];
+uint16_t screenBuffer[SV_W * SV_H];
 SDL_Window *sdlScreen;
 SDL_Renderer *sdlRenderer;
 SDL_Texture *sdlTexture;
 
-uint8_t *buffer;
-uint32_t bufferSize = 0;
+uint8_t *romBuffer;
+uint32_t romBufferSize = 0;
 
 SDL_GameController *controller = NULL;
 
@@ -54,7 +52,8 @@ SDL_bool NeedUpdate(void);
 void DrawDropROM(void);
 
 int nextMenuState = 0;
-MenuState menuStates[4];
+#define MENUSTATE_STACK_SIZE 4
+MenuState menuStates[MENUSTATE_STACK_SIZE];
 void PushMenuState(MenuState state);
 void PopMenuState(void);
 MenuState GetMenuState(void);
@@ -100,6 +99,7 @@ char *keysNames[] = {
     "Increase Ghosting",
     "Mute Audio",
 };
+// Warning: Emscripten and Android use default values
 int keysMapping[] = {
     SDL_SCANCODE_RIGHT,
     SDL_SCANCODE_LEFT,
@@ -153,9 +153,9 @@ void SetRomName(const char *path)
 
 int LoadROM(const char *filename)
 {
-    if (buffer != NULL) {
-        free(buffer);
-        buffer = NULL;
+    if (romBuffer != NULL) {
+        free(romBuffer);
+        romBuffer = NULL;
     }
 
     SDL_RWops *romfile = SDL_RWFromFile(filename, "rb");
@@ -163,9 +163,9 @@ int LoadROM(const char *filename)
         fprintf(stderr, "SDL_RWFromFile(): Unable to open file!\n");
         return 1;
     }
-    bufferSize = (uint32_t)SDL_RWsize(romfile);
-    buffer = (uint8_t *)malloc(bufferSize);
-    SDL_RWread(romfile, buffer, bufferSize, 1);
+    romBufferSize = (uint32_t)SDL_RWsize(romfile);
+    romBuffer = (uint8_t *)malloc(romBufferSize);
+    SDL_RWread(romfile, romBuffer, romBufferSize, 1);
     if (SDL_RWclose(romfile) != 0) {
         fprintf(stderr, "SDL_RWclose(): Unable to close file!\n");
         return 1;
@@ -176,9 +176,9 @@ int LoadROM(const char *filename)
 
 //int LoadROM(const char *filename)
 //{
-//    if (buffer != NULL) {
-//        free(buffer);
-//        buffer = NULL;
+//    if (romBuffer != NULL) {
+//        free(romBuffer);
+//        romBuffer = NULL;
 //    }
 //
 //    FILE *romfile = fopen(filename, "rb");
@@ -187,12 +187,12 @@ int LoadROM(const char *filename)
 //        return 1;
 //    }
 //    fseek(romfile, 0, SEEK_END);
-//    bufferSize = ftell(romfile);
+//    romBufferSize = ftell(romfile);
 //    fseek(romfile, 0, SEEK_SET);
 //
-//    buffer = (uint8_t *)malloc(bufferSize);
+//    romBuffer = (uint8_t *)malloc(romBufferSize);
 //
-//    fread(buffer, bufferSize, 1, romfile);
+//    fread(romBuffer, romBufferSize, 1, romfile);
 //
 //    if (fclose(romfile) == EOF) {
 //        printf("fclose(): Unable to close file!\n");
@@ -204,7 +204,15 @@ int LoadROM(const char *filename)
 
 void LoadBuffer(void)
 {
-    supervision_load(&buffer, bufferSize);
+    if (!supervision_load(romBuffer, romBufferSize)) {
+        SDL_memset(screenBuffer, 0, sizeof(screenBuffer));
+        while (GetMenuState() != MENUSTATE_NONE) {
+            PopMenuState();
+        }
+        PushMenuState(MENUSTATE_DROP_ROM);
+        SDL_PauseAudio(1);
+        return;
+    }
     MenuState prevState = GetMenuState();
     PopMenuState();
     PushMenuState(MENUSTATE_EMULATION);
@@ -213,18 +221,18 @@ void LoadBuffer(void)
     }
     supervision_set_color_scheme(currentPalette);
     supervision_set_ghosting(currentGhosting);
+    SDL_PauseAudio(0);
 }
 
 void AudioCallback(void *userdata, uint8_t *stream, int len)
 {
-    // The alternative of SDL_PauseAudio()
-    //if (GetMenuState() != MENUSTATE_EMULATION) {
-    //    SDL_memset(stream, 0, len);
-    //    return;
-    //}
+    if (GetMenuState() != MENUSTATE_EMULATION) {
+        SDL_memset(stream, 0, len);
+        return;
+    }
 
     // U8 to F32
-    sound_stream_update(stream, len / 4);
+    supervision_update_sound(stream, len / 4);
     float *s = (float*)(stream + len) - 1;
     for (int i = len / 4 - 1; i >= 0; i--) {
         // 127 - max
@@ -232,7 +240,7 @@ void AudioCallback(void *userdata, uint8_t *stream, int len)
     }
 
     // U8 or S8
-    /*sound_stream_update(stream, len);
+    /*supervision_update_sound(stream, len);
     for (int i = 0; i < len; i++) {
         stream[i] = (uint8_t)(stream[i] * audioVolume / (float)SDL_MIX_MAXVOLUME);
     }*/
@@ -243,14 +251,11 @@ void HandleInput(void)
     uint8_t controls_state = 0;
     const uint8_t *keystate = SDL_GetKeyboardState(NULL);
 
-    if (keystate[keysMapping[0]]) controls_state |= 0x01;
-    if (keystate[keysMapping[1]]) controls_state |= 0x02;
-    if (keystate[keysMapping[2]]) controls_state |= 0x04;
-    if (keystate[keysMapping[3]]) controls_state |= 0x08;
-    if (keystate[keysMapping[4]]) controls_state |= 0x10; // B
-    if (keystate[keysMapping[5]]) controls_state |= 0x20; // A
-    if (keystate[keysMapping[6]]) controls_state |= 0x40; // Select
-    if (keystate[keysMapping[7]]) controls_state |= 0x80; // Start
+    for (int i = 0; i < 8; i++) {
+        if (keystate[keysMapping[i]]) {
+            controls_state |= 1 << i;
+        }
+    }
 
     if (SDL_GameControllerGetAttached(controller)) {
         if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) controls_state |= 0x01;
@@ -268,8 +273,12 @@ void HandleInput(void)
         if (SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY) < -31130) controls_state |= 0x08;
     }
 
-    controls_state_write(0, controls_state);
+    supervision_set_input(controls_state);
 }
+
+#ifdef __ANDROID__
+char romPath[1024];
+#endif
 
 void PollEvents(void)
 {
@@ -292,6 +301,12 @@ void PollEvents(void)
                     break;
                 }
             }
+            if (event.key.keysym.scancode == SDL_SCANCODE_AC_BACK) {
+#ifdef __ANDROID__
+                supervision_save_state(romPath, 9);
+#endif
+                done = SDL_TRUE;
+            }
         }
         // SDL_CONTROLLERBUTTONDOWN doesn't work
         else if (event.type == SDL_JOYBUTTONDOWN) {
@@ -302,13 +317,14 @@ void PollEvents(void)
                 LoadState();
             }
         }
+#ifndef __ANDROID__
         else if (event.type == SDL_WINDOWEVENT) {
             switch (event.window.event) {
             case SDL_WINDOWEVENT_RESIZED:
                 if (!IsFullscreen()) {
                     SDL_SetWindowSize(sdlScreen,
-                        (event.window.data1 + SCREEN_W / 2) / SCREEN_W * SCREEN_W,
-                        (event.window.data2 + SCREEN_H / 2) / SCREEN_H * SCREEN_H);
+                        (event.window.data1 + SV_W / 2) / SV_W * SV_W,
+                        (event.window.data2 + SV_H / 2) / SV_H * SV_H);
                 }
                 break;
             case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -322,10 +338,18 @@ void PollEvents(void)
                 break;
             }
         }
+#endif
         else if (event.type == SDL_DROPFILE) {
             if (LoadROM(event.drop.file) == 0) {
                 LoadBuffer();
             }
+#ifdef __ANDROID__
+            // External SD Card aren't writable
+            strncpy(romPath, SDL_AndroidGetExternalStoragePath(), sizeof(romPath));
+            strncat(romPath, "/", sizeof(romPath));
+            strncat(romPath, romName, sizeof(romPath));
+            supervision_load_state(romPath, 9);
+#endif
             SDL_free(event.drop.file);
         }
         else if (event.type == SDL_JOYDEVICEADDED) {
@@ -362,7 +386,7 @@ void Loop(void)
     }
 
     // Draw
-    SDL_UpdateTexture(sdlTexture, NULL, screenBuffer, SCREEN_W * sizeof(uint16_t));
+    SDL_UpdateTexture(sdlTexture, NULL, screenBuffer, SV_W * sizeof(uint16_t));
 
     SDL_RenderClear(sdlRenderer);
     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
@@ -378,22 +402,25 @@ int main(int argc, char *argv[])
 {
     OR_DIE(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0);
 
-    sdlScreen = SDL_CreateWindow("Potator (SDL2)",
+    char title[64] = { 0 };
+    snprintf(title, sizeof(title), "Potator (SDL2) %u.%u.%u (core: %u.%u.%u)",
+        1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+    sdlScreen = SDL_CreateWindow(title,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        SCREEN_W * windowScale, SCREEN_H * windowScale,
+        SV_W * windowScale, SV_H * windowScale,
         SDL_WINDOW_RESIZABLE);
     OR_DIE(sdlScreen == NULL);
 
     sdlRenderer = SDL_CreateRenderer(sdlScreen, -1, SDL_RENDERER_PRESENTVSYNC);
     OR_DIE(sdlRenderer == NULL);
 
-    SDL_RenderSetLogicalSize(sdlRenderer, SCREEN_W, SCREEN_H);
+    SDL_RenderSetLogicalSize(sdlRenderer, SV_W, SV_H);
 
     sdlTexture = SDL_CreateTexture(sdlRenderer,
         SDL_PIXELFORMAT_BGR555,
         SDL_TEXTUREACCESS_STREAMING,
-        SCREEN_W, SCREEN_H);
+        SV_W, SV_H);
     OR_DIE(sdlTexture == NULL);
 
     SDL_AudioSpec audio_spec;
@@ -421,7 +448,7 @@ int main(int argc, char *argv[])
         LoadBuffer();
     }
 
-    SDL_PauseAudio(0);
+    //SDL_PauseAudio(0);
     //SDL_PauseAudioDevice(devid, 0);
 
     InitCounter();
@@ -443,6 +470,10 @@ int main(int argc, char *argv[])
     SDL_DestroyWindow(sdlScreen);
 
     SDL_Quit();
+#ifdef __ANDROID__
+    // Unload library hack https://stackoverflow.com/a/6509866
+    exit(0);
+#endif
     return 0;
 }
 
@@ -510,9 +541,9 @@ SDL_bool NeedUpdate(void)
             elapsedCounter += (double)((now - startCounter) * 1000) / SDL_GetPerformanceFrequency();
             startCounter = now;
         }
-        result = elapsedCounter >= 16.666;
+        result = elapsedCounter >= 1000.0 / UPDATE_RATE;
         if (result) {
-            elapsedCounter -= 16.666;
+            elapsedCounter -= 1000.0 / UPDATE_RATE;
         }
     }
     return result;
@@ -522,27 +553,31 @@ void DrawDropROM(void)
 {
     static uint8_t fade = 0;
     char dropRom[] = {
-        "##  ##  ### ##   ##  ### # #"
+        "##  ###  ## ###  ###  ## ###"
         "# # # # # # # #  # # # # ###"
-        "# # ##  # # ##   ##  # # # #"
-        "##  # # ### #    # # ### # #"
+        "# # ##  # # ###  ##  # # # #"
+        "### # # ##  #    # # ##  # #"
     };
     uint8_t f = (fade < 32) ? fade : 63 - fade;
     uint16_t color = (f << 0) | (f << 5) | (f << 10);
     fade = (fade + 1) % 64;
 
     int width = 28, height = 4;
-    int scale = 4, start = (SCREEN_W - width * scale) / 2 + SCREEN_W * (SCREEN_H - height * scale) / 2;
+    int scale = 4, start = (SV_W - width * scale) / 2 + SV_W * (SV_H - height * scale) / 2;
     for (int j = 0; j < height * scale; j++) {
         for (int i = 0; i < width * scale; i++) {
             if (dropRom[i / scale + width * (j / scale)] == '#')
-                screenBuffer[start + i + SCREEN_W * j] = color;
+                screenBuffer[start + i + SV_W * j] = color;
         }
     }
 }
 
 void PushMenuState(MenuState state)
 {
+    if (nextMenuState >= MENUSTATE_STACK_SIZE) {
+        // Error
+        return;
+    }
     if (nextMenuState == 0 || (nextMenuState > 0 && menuStates[nextMenuState - 1] != state)) {
         menuStates[nextMenuState] = state;
         nextMenuState++;
@@ -565,13 +600,13 @@ MenuState GetMenuState(void)
 // Emscripten
 void UploadROM(void *newBuffer, int newBufferSize, const char *fileName)
 {
-    bufferSize = newBufferSize;
-    if (buffer != NULL) {
-        free(buffer);
-        buffer = NULL;
+    romBufferSize = newBufferSize;
+    if (romBuffer != NULL) {
+        free(romBuffer);
+        romBuffer = NULL;
     }
-    buffer = (uint8_t *)malloc(bufferSize);
-    memcpy(buffer, newBuffer, bufferSize);
+    romBuffer = (uint8_t *)malloc(romBufferSize);
+    memcpy(romBuffer, newBuffer, romBufferSize);
 
     SetRomName(fileName);
     LoadBuffer();
@@ -596,9 +631,9 @@ void IncreaseWindowSize(void)
 
     SDL_DisplayMode dm;
     SDL_GetDesktopDisplayMode(0, &dm);
-    if (SCREEN_W * (windowScale + 1) <= dm.w && SCREEN_H * (windowScale + 1) <= dm.h) {
+    if (SV_W * (windowScale + 1) <= dm.w && SV_H * (windowScale + 1) <= dm.h) {
         windowScale++;
-        SDL_SetWindowSize(sdlScreen, SCREEN_W * windowScale, SCREEN_H * windowScale);
+        SDL_SetWindowSize(sdlScreen, SV_W * windowScale, SV_H * windowScale);
     }
 }
 
@@ -609,7 +644,7 @@ void DecreaseWindowSize(void)
 
     if (windowScale > 1) {
         windowScale--;
-        SDL_SetWindowSize(sdlScreen, SCREEN_W * windowScale, SCREEN_H * windowScale);
+        SDL_SetWindowSize(sdlScreen, SV_W * windowScale, SV_H * windowScale);
     }
 }
 

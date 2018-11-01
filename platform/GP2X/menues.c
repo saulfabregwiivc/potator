@@ -22,7 +22,8 @@ uint32 fileCounter;
 
 extern uint8* buffer;
 extern unsigned int buffer_size;
-extern void loadROM(char* filename);
+extern void LoadROM(char* filename);
+extern uint16 mapRGB(uint8 r, uint8 g, uint8 b);
 
 #define IOBASE 0xC0000000
 #define FPLLSETVREG (0x0910 >> 1)
@@ -267,9 +268,10 @@ void handleFileMenu(void)
 				//gp2x_printf(0, 1, 1, "Loading...\n\n%s", FileList[curFile + virtualFile].fName);
 				//gp2x_video_RGB_flip(0);
 				RESIZE();
-				loadROM(FileList[curFile + virtualFile].fName);
+				LoadROM(FileList[curFile + virtualFile].fName);
 				textClear();
-				supervision_load(&buffer, (uint32)buffer_size);
+				supervision_load(buffer, (uint32)buffer_size);
+				supervision_set_map_func(mapRGB);
 				textClear();
 				return;
 			}
@@ -493,7 +495,13 @@ void handleMainMenu(void)
 		if(pad & GP2X_X) {
 			switch(menuOption){
 			case MMOPTION_CONTINUE: RESIZE(); textClear(); return;
-			case MMOPTION_RESTART: RESIZE(); supervision_reset(); textClear(); return;
+			case MMOPTION_RESTART: {
+				RESIZE();
+				supervision_reset();
+				supervision_set_map_func(mapRGB);
+				textClear();
+				return;
+			}
 			case MMOPTION_SELECTOR: handleFileMenu(); return;
 			case MMOPTION_OPTIONS: handleOptionsMenu(); textClear(); return;
 			case MMOPTION_SAVESTATE: {

@@ -8,7 +8,6 @@
 #include <SDL.h>
 
 #include "../../common/supervision.h"
-#include "../../common/sound.h"
 
 #define OR_DIE(cond) \
     if (cond) { \
@@ -16,15 +15,14 @@
         exit(1); \
     }
 
-#define SCREEN_W 160
-#define SCREEN_H 160
+#define UPDATE_RATE 60
 
 SDL_bool done = SDL_FALSE;
 
 uint8_t *buffer;
 uint32_t bufferSize = 0;
 
-uint16_t screenBuffer[SCREEN_W * SCREEN_H];
+uint16_t screenBuffer[SV_W * SV_H];
 SDL_Surface *PrimarySurface;
 int windowScale = 4;
 int windowWidth = 0;
@@ -94,7 +92,7 @@ void PollEvents(void)
                 ToggleFullscreen();
                 break;
             case SDLK_TAB:
-                supervision_load(&buffer, bufferSize);
+                supervision_load(buffer, bufferSize);
                 break;
             case SDLK_1:
                 supervision_save_state(romName, 0);
@@ -125,7 +123,7 @@ void PollEvents(void)
         else if (event.type == SDL_VIDEORESIZE) {
             if (!isFullscreen) {
                 int mins = event.resize.w < event.resize.h ? event.resize.w : event.resize.h;
-                windowScale = mins / SCREEN_W;
+                windowScale = mins / SV_W;
                 UpdateWindowSize();
             }
         }
@@ -146,7 +144,7 @@ void HandleInput(void)
     if (keystate[SDLK_z])     controls_state |= 0x40;
     if (keystate[SDLK_SPACE]) controls_state |= 0x80;
 
-    controls_state_write(0, controls_state);
+    supervision_set_input(controls_state);
 }
 
 void Draw()
@@ -157,10 +155,10 @@ void Draw()
 
     if (isFullscreen) {
         // Center
-        pDest += (windowWidth - SCREEN_W * windowScale) / 2 + (windowHeight - SCREEN_H * windowScale) / 2 * windowWidth;
+        pDest += (windowWidth - SV_W * windowScale) / 2 + (windowHeight - SV_H * windowScale) / 2 * windowWidth;
     }
-    for (int y = 0; y < SCREEN_H * windowScale; y++) {
-        for (int x = 0; x < SCREEN_W * windowScale; x++) {
+    for (int y = 0; y < SV_H * windowScale; y++) {
+        for (int x = 0; x < SV_W * windowScale; x++) {
             //*pDest = ((*pSrc & 0x7C00) >> 10) | ((*pSrc & 0x03E0) << 1) | ((*pSrc & 0x001F) << 11); // -> SDL 16-bit
             //*pDest = ((*pSrc & 0x7C00) >> (10-3)) | ((*pSrc & 0x03E0) << (3+3)) | ((*pSrc & 0x001F) << (16+3)); // -> SDL 32-bit
 
@@ -169,9 +167,9 @@ void Draw()
             pDest++;
             if (x % windowScale == windowScale - 1) pSrc++;
         }
-        if (y % windowScale != windowScale - 1) pSrc -= SCREEN_W;
+        if (y % windowScale != windowScale - 1) pSrc -= SV_W;
 
-        pDest += (windowWidth - windowScale * SCREEN_W);
+        pDest += (windowWidth - windowScale * SV_W);
     }
 
     SDL_UnlockSurface(PrimarySurface);
@@ -181,7 +179,7 @@ void Draw()
 // Audio
 void AudioCallback(void *userdata, uint8_t *stream, int len)
 {
-    sound_stream_update(stream, len);
+    supervision_update_sound(stream, len);
 }
 
 uint32_t startCounter;
@@ -201,9 +199,9 @@ SDL_bool NeedUpdate(void)
         elapsedCounter += (double)(now - startCounter);
         startCounter = now;
     }
-    result = elapsedCounter >= 16.666; // 1000.0/60.0
+    result = elapsedCounter >= 1000.0 / UPDATE_RATE;
     if (result) {
-        elapsedCounter -= 16.666;
+        elapsedCounter -= 1000.0 / UPDATE_RATE;
     }
     return result;
 }
@@ -217,7 +215,10 @@ int main(int argc, char *argv[])
 {
     OR_DIE(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0);
 
-    SDL_WM_SetCaption("Potator (SDL1)", NULL);
+    char title[64] = { 0 };
+    snprintf(title, sizeof(title), "Potator (SDL1) %u.%u.%u (core: %u.%u.%u)",
+        1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+    SDL_WM_SetCaption(title, NULL);
 
     UpdateWindowSize();
     SDL_Rect **modes = SDL_ListModes(NULL, SDL_FULLSCREEN);
@@ -259,7 +260,7 @@ Increase Window Size: =\n\
     supervision_init();
 
     if (LoadROM(argc <= 1 ? "rom.sv" : argv[1]) == 0) {
-        supervision_load(&buffer, bufferSize);
+        done = !supervision_load(buffer, bufferSize);
     }
     else {
         done = SDL_TRUE;
@@ -304,7 +305,7 @@ void ToggleFullscreen(void)
         lastScale  = windowScale;
 
         flags |= SDL_FULLSCREEN;
-        windowScale  = maxWindowHeight / SCREEN_H;
+        windowScale  = maxWindowHeight / SV_H;
         windowWidth  = maxWindowWidth;
         windowHeight = maxWindowHeight;
         SDL_ShowCursor(SDL_DISABLE);
@@ -324,8 +325,8 @@ void NextPalette(void)
 
 void UpdateWindowSize(void)
 {
-    windowWidth  = SCREEN_W * windowScale;
-    windowHeight = SCREEN_H * windowScale;
+    windowWidth  = SV_W * windowScale;
+    windowHeight = SV_H * windowScale;
     PrimarySurface = SDL_SetVideoMode(windowWidth, windowHeight, 32, VIDEOMODE_FLAGS);
     OR_DIE(PrimarySurface == NULL);
 }
@@ -335,7 +336,7 @@ void IncreaseWindowSize(void)
     if (isFullscreen)
         return;
 
-    if (SCREEN_W * (windowScale + 1) <= maxWindowWidth && SCREEN_H * (windowScale + 1) <= maxWindowHeight) {
+    if (SV_W * (windowScale + 1) <= maxWindowWidth && SV_H * (windowScale + 1) <= maxWindowHeight) {
         windowScale++;
         UpdateWindowSize();
     }

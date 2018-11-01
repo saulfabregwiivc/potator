@@ -1,13 +1,9 @@
 #ifndef __SOUND_H__
 #define __SOUND_H__
 
-#include "supervision.h"
+#include "types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define SV_SAMPLE_RATE 44100
+#include <stdio.h>
 
 void sound_reset(void);
 /*!
@@ -20,8 +16,7 @@ void sound_soundport_w(int which, int offset, int data);
 void sound_sounddma_w(int offset, int data);
 void sound_noise_w(int offset, int data);
 
-#ifdef __cplusplus
-}
-#endif
+void sound_save_state(FILE *fp);
+void sound_load_state(FILE *fp);
 
 #endif

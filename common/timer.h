@@ -1,7 +1,8 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#include "supervision.h"
+#include "types.h"
+
 #include <stdio.h>
 
 void timer_reset(void);
