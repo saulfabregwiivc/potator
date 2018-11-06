@@ -205,7 +205,6 @@ Option options[] = {
 struct VertexF
 {
     float u, v;
-    unsigned int color;
     float x, y, z;
 };
 
@@ -949,13 +948,10 @@ void Blit(int dx, int dy, int dw, int dh)
         vertices[0].x = dx - 0.5f;               vertices[0].y = dy - 0.5f;
         vertices[1].x = dx - 0.5f + slsz_scaled; vertices[1].y = dy + dh + 0.5f;
 
-        vertices[0].color
-            = vertices[1].color
-            = vertices[0].z 
-            = vertices[1].z = 0;
+        vertices[0].z = vertices[1].z = 0;
 
         sceGuDrawArray(GU_SPRITES,
-            GU_TEXTURE_32BITF | GU_COLOR_5551 | GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, vertices);
+            GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_TRANSFORM_2D, 2, 0, vertices);
     }
 
     sceGuScissor(0, 0, SCR_WIDTH, SCR_HEIGHT);
