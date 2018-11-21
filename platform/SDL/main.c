@@ -9,6 +9,8 @@
 
 #include "../../common/supervision.h"
 
+#define VERSION "1.0.1"
+
 #define OR_DIE(cond) \
     if (cond) { \
         fprintf(stderr, "[Error] SDL: %s\n", SDL_GetError()); \
@@ -157,19 +159,22 @@ void Draw()
         // Center
         pDest += (windowWidth - SV_W * windowScale) / 2 + (windowHeight - SV_H * windowScale) / 2 * windowWidth;
     }
-    for (int y = 0; y < SV_H * windowScale; y++) {
-        for (int x = 0; x < SV_W * windowScale; x++) {
-            //*pDest = ((*pSrc & 0x7C00) >> 10) | ((*pSrc & 0x03E0) << 1) | ((*pSrc & 0x001F) << 11); // -> SDL 16-bit
-            //*pDest = ((*pSrc & 0x7C00) >> (10-3)) | ((*pSrc & 0x03E0) << (3+3)) | ((*pSrc & 0x001F) << (16+3)); // -> SDL 32-bit
-
+    for (int y = 0; y < SV_H; y++) {
+        for (int x = 0; x < SV_W; x++) {
             // RGB555 (R: 0-4 bits) -> BGRA8888 (SDL 32-bit)
-            *pDest = SDL_MapRGB(PrimarySurface->format, (*pSrc & 0x001F) << 3, (*pSrc & 0x03E0) >> (5 - 3), (*pSrc & 0x7C00) >> (10 - 3));
-            pDest++;
-            if (x % windowScale == windowScale - 1) pSrc++;
+            // or SDL_MapRGB()
+            uint32_t color = ((*pSrc & 0x7C00) >> (10 - 3))
+                           | ((*pSrc & 0x03E0) << ( 3 + 3))
+                           | ((*pSrc & 0x001F) << (16 + 3));
+            // -> SDL 16-bit
+            //((*pSrc & 0x7C00) >> 10) | ((*pSrc & 0x03E0) << 1) | ((*pSrc & 0x001F) << 11);
+            pSrc++;
+            for (int i = y * windowScale; i < windowScale + y * windowScale; i++) {
+                for (int j = x * windowScale; j < windowScale + x * windowScale; j++) {
+                    pDest[i * windowWidth + j] = color;
+                }
+            }
         }
-        if (y % windowScale != windowScale - 1) pSrc -= SV_W;
-
-        pDest += (windowWidth - windowScale * SV_W);
     }
 
     SDL_UnlockSurface(PrimarySurface);
@@ -182,28 +187,26 @@ void AudioCallback(void *userdata, uint8_t *stream, int len)
     supervision_update_sound(stream, len);
 }
 
-uint32_t startCounter;
+static double nextTime;
 void InitCounter(void)
 {
-    startCounter = SDL_GetTicks();
+    nextTime = SDL_GetTicks() + 1000.0 / UPDATE_RATE;
 }
 
-SDL_bool NeedUpdate(void)
+void Wait(void)
 {
-    static double elapsedCounter = 0.0;
-    static SDL_bool result = SDL_FALSE;
-
-    // New frame
-    if (!result) {
-        uint32_t now = SDL_GetTicks();
-        elapsedCounter += (double)(now - startCounter);
-        startCounter = now;
+    uint32_t now = SDL_GetTicks();
+    uint32_t wait = 0;
+    if (nextTime <= now) {
+        if (now - nextTime > 100.0) {
+            nextTime = now;
+        }
     }
-    result = elapsedCounter >= 1000.0 / UPDATE_RATE;
-    if (result) {
-        elapsedCounter -= 1000.0 / UPDATE_RATE;
+    else {
+        wait = (uint32_t)nextTime - now;
     }
-    return result;
+    SDL_Delay(wait);
+    nextTime += 1000.0 / UPDATE_RATE;
 }
 
 // SDL Fix
@@ -216,8 +219,8 @@ int main(int argc, char *argv[])
     OR_DIE(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0);
 
     char title[64] = { 0 };
-    snprintf(title, sizeof(title), "Potator (SDL1) %u.%u.%u (core: %u.%u.%u)",
-        1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+    snprintf(title, sizeof(title), "Potator (SDL1) %s (core: %u.%u.%u)",
+        VERSION, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
     SDL_WM_SetCaption(title, NULL);
 
     UpdateWindowSize();
@@ -272,10 +275,9 @@ Increase Window Size: =\n\
     while (!done) {
         PollEvents();
         HandleInput();
-        while (NeedUpdate()) {
-            supervision_exec(screenBuffer);
-        }
+        supervision_exec(screenBuffer);
         Draw();
+        Wait();
     }
     supervision_done();
 

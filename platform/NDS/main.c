@@ -70,8 +70,8 @@ void InitVideo(void)
     REG_BG3PB = 0; // BG SCALING X
     REG_BG3PC = 0; // BG SCALING Y
     REG_BG3PD = 1 << 8;
-    REG_BG3X = -48<< 8;
-    REG_BG3Y = -16<< 8;
+    REG_BG3X = -48 * 256;
+    REG_BG3Y = -16 * 256;
 }
 
 void CheckKeys(void)

@@ -127,7 +127,6 @@ void emu_WriteConfig(void)
 void fillList(void)
 {
 	textClear();
-	int i;
 	int curFile = 0;
 	DIR *dir = opendir(".");
 		

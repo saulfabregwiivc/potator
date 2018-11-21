@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
         if (in == NULL) {
             printf("The file %s doesn't exist.\n", romname);
         }
-        fflush(in);
         fclose(in);
     }
 

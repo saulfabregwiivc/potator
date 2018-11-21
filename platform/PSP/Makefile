@@ -15,7 +15,7 @@ OBJS = \
 
 INCDIR = $(SVROOT)common $(SVROOT)common/m6502
 
-CFLAGS = -G0 -Wall -O2 -DPERFORMANCE
+CFLAGS = -G0 -Wall -O2 -DPERFORMANCE -DSV_USE_FLOATS
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti $(INCLUDE)
 ASFLAGS = $(CFLAGS)
 

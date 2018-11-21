@@ -607,7 +607,7 @@ int sort_function(const void *src_str_ptr, const void *dest_str_ptr) {
 }
 
 int strcmp_function(char *s1, char *s2) {
-	char c,i;
+	char i;
 	
 	if (strlen(s1) != strlen(s2)) return 1;
 
@@ -997,7 +997,7 @@ void gethomedir(char *dir, char* name) {
 	if (strlen(dir) == 0) {
 		getcwd(dir, 256);
 	}
-	sprintf(dir,"%s//.%s//",dir, name);
+	sprintf(dir + strlen(dir), "//.%s//", name);
 	mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.config/program if it doesn't exist
 #else
 	getcwd(dir, 256);

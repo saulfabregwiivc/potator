@@ -26,7 +26,7 @@ EXPORTED_FUNCTIONS = \
    '_SetVolume', \
    '_SetKey', \
    '_MuteAudio', \
-   '_supervision_set_ghosting'
+   '_SetGhosting'
 
 .PHONY: potator clean clean2 release all default
 

@@ -14,6 +14,8 @@
 
 #include "../../common/supervision.h"
 
+#define VERSION "1.0.1"
+
 #define OR_DIE(cond) \
     if (cond) { \
         fprintf(stderr, "[Error] SDL: %s\n", SDL_GetError()); \
@@ -71,12 +73,14 @@ void SaveState(void);
 void LoadState(void);
 
 int audioVolume = SDL_MIX_MAXVOLUME;
+int lastVolume = -1;
 void SetVolume(int volume);
 void MuteAudio(void);
 
 int currentGhosting = 0;
 void IncreaseGhosting(void);
 void DecreaseGhosting(void);
+void SetGhosting(int frameCount);
 
 char *keysNames[] = {
     "Right",
@@ -110,7 +114,11 @@ int keysMapping[] = {
     SDL_SCANCODE_Z,     // Select
     SDL_SCANCODE_SPACE, // Start
 
-    SDL_SCANCODE_RETURN,
+#ifdef __EMSCRIPTEN__
+    SDL_SCANCODE_UNKNOWN,
+#else
+    SDL_SCANCODE_F11,
+#endif
     SDL_SCANCODE_TAB,
     SDL_SCANCODE_1,
     SDL_SCANCODE_2,
@@ -174,34 +182,6 @@ int LoadROM(const char *filename)
     return 0;
 }
 
-//int LoadROM(const char *filename)
-//{
-//    if (romBuffer != NULL) {
-//        free(romBuffer);
-//        romBuffer = NULL;
-//    }
-//
-//    FILE *romfile = fopen(filename, "rb");
-//    if (romfile == NULL) {
-//        printf("fopen(): Unable to open file!\n");
-//        return 1;
-//    }
-//    fseek(romfile, 0, SEEK_END);
-//    romBufferSize = ftell(romfile);
-//    fseek(romfile, 0, SEEK_SET);
-//
-//    romBuffer = (uint8_t *)malloc(romBufferSize);
-//
-//    fread(romBuffer, romBufferSize, 1, romfile);
-//
-//    if (fclose(romfile) == EOF) {
-//        printf("fclose(): Unable to close file!\n");
-//        return 1;
-//    }
-//    SetRomName(filename);
-//    return 0;
-//}
-
 void LoadBuffer(void)
 {
     if (!supervision_load(romBuffer, romBufferSize)) {
@@ -227,7 +207,7 @@ void LoadBuffer(void)
 void AudioCallback(void *userdata, uint8_t *stream, int len)
 {
     if (GetMenuState() != MENUSTATE_EMULATION) {
-        SDL_memset(stream, 0, len);
+        SDL_memset(stream, ((SDL_AudioSpec*)userdata)->silence, len);
         return;
     }
 
@@ -235,9 +215,14 @@ void AudioCallback(void *userdata, uint8_t *stream, int len)
     supervision_update_sound(stream, len / 4);
     float *s = (float*)(stream + len) - 1;
     for (int i = len / 4 - 1; i >= 0; i--) {
-        // 127 - max
-        *s-- = stream[i] / 127.0f * audioVolume / (float)SDL_MIX_MAXVOLUME;
+        // 45 - max
+        *s-- = stream[i] / 63.0f * audioVolume / (float)SDL_MIX_MAXVOLUME;
     }
+
+    // Mono
+    //for (int i = 0; i < len / 4; i += 2) {
+    //    s[i] = s[i + 1] = (s[i] + s[i + 1]) / 2;
+    //}
 
     // U8 or S8
     /*supervision_update_sound(stream, len);
@@ -301,6 +286,10 @@ void PollEvents(void)
                     break;
                 }
             }
+            if (event.key.keysym.scancode == SDL_SCANCODE_RETURN
+                     && (SDL_GetModState() & KMOD_ALT)) {
+                ToggleFullscreen();
+            }
             if (event.key.keysym.scancode == SDL_SCANCODE_AC_BACK) {
 #ifdef __ANDROID__
                 supervision_save_state(romPath, 9);
@@ -346,8 +335,8 @@ void PollEvents(void)
 #ifdef __ANDROID__
             // External SD Card aren't writable
             strncpy(romPath, SDL_AndroidGetExternalStoragePath(), sizeof(romPath));
-            strncat(romPath, "/", sizeof(romPath));
-            strncat(romPath, romName, sizeof(romPath));
+            strncat(romPath, "/", sizeof(romPath) - strlen(romPath) - 1);
+            strncat(romPath, romName, sizeof(romPath) - strlen(romPath) - 1);
             supervision_load_state(romPath, 9);
 #endif
             SDL_free(event.drop.file);
@@ -367,11 +356,10 @@ void Loop(void)
 {
     PollEvents();
 
-    HandleInput();
-
     while (NeedUpdate()) {
         switch (GetMenuState()) {
         case MENUSTATE_EMULATION:
+            HandleInput();
             supervision_exec(screenBuffer);
         break;
         case MENUSTATE_DROP_ROM:
@@ -403,8 +391,8 @@ int main(int argc, char *argv[])
     OR_DIE(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0);
 
     char title[64] = { 0 };
-    snprintf(title, sizeof(title), "Potator (SDL2) %u.%u.%u (core: %u.%u.%u)",
-        1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+    snprintf(title, sizeof(title), "Potator (SDL2) %s (core: %u.%u.%u)",
+        VERSION, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
     sdlScreen = SDL_CreateWindow(title,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
@@ -430,7 +418,7 @@ int main(int argc, char *argv[])
     audio_spec.samples = 512;
     audio_spec.format = AUDIO_F32; // Or AUDIO_S8. Problem with AUDIO_U8
     audio_spec.callback = AudioCallback;
-    audio_spec.userdata = NULL;
+    audio_spec.userdata = &audio_spec;
     OR_DIE(SDL_OpenAudio(&audio_spec, NULL) < 0);
     //SDL_AudioDeviceID devid = SDL_OpenAudioDevice(NULL, 0, &audio_spec, NULL, 0);
     //OR_DIE(devid == 0);
@@ -540,6 +528,9 @@ SDL_bool NeedUpdate(void)
             uint64_t now = SDL_GetPerformanceCounter();
             elapsedCounter += (double)((now - startCounter) * 1000) / SDL_GetPerformanceFrequency();
             startCounter = now;
+            if (elapsedCounter > 100.0) {
+                elapsedCounter = 0.0;
+            }
         }
         result = elapsedCounter >= 1000.0 / UPDATE_RATE;
         if (result) {
@@ -668,11 +659,14 @@ void SetVolume(int volume)
         audioVolume = SDL_MIX_MAXVOLUME; // 128
     else
         audioVolume = volume;
+    if (lastVolume != -1) { // Mute
+        lastVolume = audioVolume;
+        audioVolume = 0;
+    }
 }
 
 void MuteAudio(void)
 {
-    static int lastVolume = -1;
     if (lastVolume == -1) {
         lastVolume = audioVolume;
         audioVolume = 0;
@@ -685,16 +679,22 @@ void MuteAudio(void)
 
 void IncreaseGhosting(void)
 {
-    if (currentGhosting < SV_GHOSTING_MAX) {
-        currentGhosting++;
-        supervision_set_ghosting(currentGhosting);
-    }
+    SetGhosting(currentGhosting + 1);
 }
 
 void DecreaseGhosting(void)
 {
-    if (currentGhosting > 0) {
-        currentGhosting--;
+    SetGhosting(currentGhosting - 1);
+}
+
+void SetGhosting(int frameCount)
+{
+    currentGhosting = frameCount;
+    if (frameCount < 0)
+        currentGhosting = 0;
+    else if (frameCount > SV_GHOSTING_MAX)
+        currentGhosting = SV_GHOSTING_MAX;
+    if (frameCount == currentGhosting) {
         supervision_set_ghosting(currentGhosting);
     }
 }

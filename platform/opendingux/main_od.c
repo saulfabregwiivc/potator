@@ -152,14 +152,11 @@ void initSDL(void) {
 	Ainit();
 }
 
-uint16 mapRGB(uint8 r, uint8 g, uint8 b)
-{
+uint16 mapRGB(uint8 r, uint8 g, uint8 b) {
 	return PIX_TO_RGB(actualScreen->format, r, g, b);
 }
 
 unsigned char potatorLoadROM(char* filename) {
-	unsigned int length;
-
 	if (rom_buffer != NULL)
 		free(rom_buffer);
 
@@ -190,7 +187,7 @@ int main(int argc, char *argv[]) {
 
 	// Get init file directory & name
 	gethomedir(current_conf_app, "potator");
-	sprintf(current_conf_app,"%s//potator.cfg",current_conf_app);
+	strncat(current_conf_app, "//potator.cfg", sizeof(current_conf_app) - strlen(current_conf_app) - 1);
 	
 	// Init graphics & sound
 	initSDL();
@@ -199,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     //load rom file via args if a rom path is supplied
 	if(argc > 1) {
-		strcpy(gameName,argv[1]);
+		strncpy(gameName, argv[1], sizeof(gameName) - 1);
 		m_Flag = GF_GAMEINIT;
 	}
 

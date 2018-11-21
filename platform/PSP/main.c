@@ -21,7 +21,7 @@
 
 #include "../../common/supervision.h"
 
-#define VERSION "1.0.0"
+#define VERSION "1.0.2"
 
 PSP_MODULE_INFO("Potator", PSP_MODULE_USER, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);

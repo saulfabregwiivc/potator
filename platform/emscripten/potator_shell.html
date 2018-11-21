@@ -383,7 +383,7 @@
       .preview-td {
         background-color: #111;
         padding: 0px;
-        width: 0px;
+        width: 1px;
         text-align: center;
       }
       .preview-img {
@@ -421,14 +421,14 @@
         <span class="tooltiptext">Load state <kbd>2</kbd></span>
       </div><!-- delete space
    --><div class="tooltip" id="ghost">
-        <input id="ghostslider" class="slider" type="range" min="0" max="8" value="0" step="1">
+        <input id="ghostslider" class="slider" type="range" min="0" max="8" value="0" step="1" autocomplete="off">
         <span class="tooltiptext" style="width: 200px;">Ghosting (reduce flickering)</span>
       </div>
       <div style="float: right;">
         <div class="tooltip">
           <button id="muteb" class="main-button" onclick="this.id = (this.id=='muteb'?'muteab':'muteb'); Module.ccall('MuteAudio', 'void', ['void'])"></button>
           <span class="tooltipaudio">
-            <input id="volumeslider" class="slider" type="range" min="0" max="128" value="128" step="1">
+            <input id="volumeslider" class="slider" type="range" min="0" max="128" value="128" step="1" autocomplete="off">
           </span>
         </div><!-- delete space
      --><div class="tooltip">
@@ -570,6 +570,7 @@
     <textarea class="emscripten" id="output" rows="8" style="display: none;"></textarea>
 
     <script>
+      'use strict';
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
       var spinnerElement = document.getElementById('spinner');
@@ -708,7 +709,7 @@
     createSlider(document.getElementById("volumeslider"),
       (e) => { Module.ccall('SetVolume', 'void', ['number'], [e.target.value]); });
     createSlider(document.getElementById("ghostslider"),
-      (e) => { Module.ccall('supervision_set_ghosting', 'void', ['number'], [e.target.value]); });
+      (e) => { Module.ccall('SetGhosting', 'void', ['number'], [e.target.value]); });
 
     var newButtonId = -1;
     var ghostSlider = document.getElementById("ghostslider");
@@ -842,7 +843,7 @@
       var ctx = canvas.getContext('2d');
       var d = ctx.createImageData(WIDTH, HEIGHT);
       var f = FS.readFile(fileName);
-      var startRegs = 36 + 4;
+      var startRegs = 0;
       var startUpperRam = startRegs + 0x2000 * 2;
       var startVRAM = startUpperRam + f[startRegs + 2] / 4 + f[startRegs + 3] * 0x30;
       for (let y = 0; y < HEIGHT; y++) {
@@ -858,7 +859,7 @@
 
       dstImage.src = canvas.toDataURL();
     }
-    
+
     function toggleFullscreen() {
       if (Browser.isFullscreen)
         Module.canvas.exitFullscreen();
