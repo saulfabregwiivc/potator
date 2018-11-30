@@ -14,7 +14,7 @@
 
 #include "../../common/supervision.h"
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 #define OR_DIE(cond) \
     if (cond) { \
@@ -213,10 +213,10 @@ void AudioCallback(void *userdata, uint8_t *stream, int len)
 
     // U8 to F32
     supervision_update_sound(stream, len / 4);
-    float *s = (float*)(stream + len) - 1;
+    float *s = (float*)stream;
     for (int i = len / 4 - 1; i >= 0; i--) {
         // 45 - max
-        *s-- = stream[i] / 63.0f * audioVolume / (float)SDL_MIX_MAXVOLUME;
+        s[i] = stream[i] / 63.0f * audioVolume / (float)SDL_MIX_MAXVOLUME;
     }
 
     // Mono
@@ -224,10 +224,10 @@ void AudioCallback(void *userdata, uint8_t *stream, int len)
     //    s[i] = s[i + 1] = (s[i] + s[i + 1]) / 2;
     //}
 
-    // U8 or S8
+    // U8 or S8. Don't use SDL_PauseAudio() with AUDIO_U8
     /*supervision_update_sound(stream, len);
     for (int i = 0; i < len; i++) {
-        stream[i] = (uint8_t)(stream[i] * audioVolume / (float)SDL_MIX_MAXVOLUME);
+        stream[i] = (uint8_t)((stream[i] << 1) * audioVolume / (float)SDL_MIX_MAXVOLUME) + ((SDL_AudioSpec*)userdata)->silence;
     }*/
 }
 
@@ -333,7 +333,7 @@ void PollEvents(void)
                 LoadBuffer();
             }
 #ifdef __ANDROID__
-            // External SD Card aren't writable
+            // External SD Card isn't writable
             strncpy(romPath, SDL_AndroidGetExternalStoragePath(), sizeof(romPath));
             strncat(romPath, "/", sizeof(romPath) - strlen(romPath) - 1);
             strncat(romPath, romName, sizeof(romPath) - strlen(romPath) - 1);
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
     audio_spec.freq = SV_SAMPLE_RATE;
     audio_spec.channels = 2;
     audio_spec.samples = 512;
-    audio_spec.format = AUDIO_F32; // Or AUDIO_S8. Problem with AUDIO_U8
+    audio_spec.format = AUDIO_F32;
     audio_spec.callback = AudioCallback;
     audio_spec.userdata = &audio_spec;
     OR_DIE(SDL_OpenAudio(&audio_spec, NULL) < 0);

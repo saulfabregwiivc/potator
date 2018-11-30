@@ -96,13 +96,12 @@ void HandleInput()
 void AudioStreamCallback(void* buf, unsigned int length, void* userdata)
 {
     length <<= 1;
-    // U8 (0 - 127) stereo to S16 stereo
     supervision_update_sound((uint8_t*)buf, length);
     int16_t* dst = (int16_t*)buf;
     uint8_t* src = (uint8_t*)buf;
     int i;
     for (i = length - 1; i >= 0; i--) {
-        dst[i] = src[i] << 8; 
+        dst[i] = src[i] << 8;
     }
 }
 
