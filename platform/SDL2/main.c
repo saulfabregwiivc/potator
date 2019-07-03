@@ -14,7 +14,7 @@
 
 #include "../../common/supervision.h"
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 #define OR_DIE(cond) \
     if (cond) { \
@@ -182,15 +182,20 @@ int LoadROM(const char *filename)
     return 0;
 }
 
+void ReturnToDropROM(void)
+{
+    SDL_memset(screenBuffer, 0, sizeof(screenBuffer));
+    while (GetMenuState() != MENUSTATE_NONE) {
+        PopMenuState();
+    }
+    PushMenuState(MENUSTATE_DROP_ROM);
+    SDL_PauseAudio(1);
+}
+
 void LoadBuffer(void)
 {
     if (!supervision_load(romBuffer, romBufferSize)) {
-        SDL_memset(screenBuffer, 0, sizeof(screenBuffer));
-        while (GetMenuState() != MENUSTATE_NONE) {
-            PopMenuState();
-        }
-        PushMenuState(MENUSTATE_DROP_ROM);
-        SDL_PauseAudio(1);
+        ReturnToDropROM();
         return;
     }
     MenuState prevState = GetMenuState();
@@ -332,6 +337,9 @@ void PollEvents(void)
             if (LoadROM(event.drop.file) == 0) {
                 LoadBuffer();
             }
+            else {
+                ReturnToDropROM();
+            }
 #ifdef __ANDROID__
             // External SD Card isn't writable
             strncpy(romPath, SDL_AndroidGetExternalStoragePath(), sizeof(romPath));
@@ -361,11 +369,13 @@ void Loop(void)
         case MENUSTATE_EMULATION:
             HandleInput();
             supervision_exec(screenBuffer);
-        break;
+            break;
         case MENUSTATE_DROP_ROM:
             DrawDropROM();
             break;
         case MENUSTATE_PAUSE:
+            SDL_Delay(16); // Reduce CPU usage
+            break;
         case MENUSTATE_SET_KEY:
             break;
         default:
@@ -597,6 +607,9 @@ void UploadROM(void *newBuffer, int newBufferSize, const char *fileName)
         romBuffer = NULL;
     }
     romBuffer = (uint8_t *)malloc(romBufferSize);
+    if (romBuffer == NULL) {
+        return;
+    }
     memcpy(romBuffer, newBuffer, romBufferSize);
 
     SetRomName(fileName);

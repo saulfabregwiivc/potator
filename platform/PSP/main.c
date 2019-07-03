@@ -21,7 +21,7 @@
 
 #include "../../common/supervision.h"
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 PSP_MODULE_INFO("Potator", PSP_MODULE_USER, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
@@ -38,8 +38,7 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
 
 static unsigned int __attribute__((aligned(16))) list[262144];
 static uint32_t __attribute__((aligned(16))) pixels[BUF_WIDTH * SCR_HEIGHT];
-
-uint16_t screenBuffer[SV_W * SV_H];
+static uint32_t __attribute__((aligned(16))) pixelsPreview[BUF_WIDTH * SCR_HEIGHT];
 
 uint8_t* romBuffer = NULL;
 uint32_t romBufferSize = 0;
@@ -101,7 +100,7 @@ void AudioStreamCallback(void* buf, unsigned int length, void* userdata)
     uint8_t* src = (uint8_t*)buf;
     int i;
     for (i = length - 1; i >= 0; i--) {
-        dst[i] = src[i] << 8;
+        dst[i] = src[i] << (8 + 1);
     }
 }
 
@@ -574,8 +573,8 @@ FUNC_ACTION Menu_main(int stage, MenuFunc* next, SceCtrlData newPad)
         count = 0;
         areYouSure = FALSE;
         // Game screen preview
-        uint32_t* pDest = (uint32_t*)pixels; // GU_PSM_8888
-        uint16_t* pSrc = screenBuffer;
+        uint32_t* pDest = pixelsPreview; // GU_PSM_8888
+        uint16_t* pSrc  = (uint16_t*)pixels;
         int y, x;
         for (y = 0; y < SV_H; y++) {
             for (x = 0; x < SV_W; x++) {
@@ -584,10 +583,11 @@ FUNC_ACTION Menu_main(int stage, MenuFunc* next, SceCtrlData newPad)
                 pSrc++;
             }
             pDest += (TEX_WIDTH - SV_W);
+            pSrc  += (TEX_WIDTH - SV_W);
         }
     }
     else {
-        sceGuCopyImage(PIX_FORMAT, 0, 0, SV_W, SV_H, TEX_WIDTH, pixels,
+        sceGuCopyImage(PIX_FORMAT, 0, 0, SV_W, SV_H, TEX_WIDTH, pixelsPreview,
             SCR_WIDTH - SV_W, SCR_HEIGHT - SV_H, BUF_WIDTH, (void*)(((unsigned int)fbpc) + 0x4000000));
 
         intraFontPrint(ltn[0], MENU_PADDING_LEFT +  0, MENU_PADDING_TOP, "Main Menu");
@@ -936,7 +936,7 @@ void Blit(int dx, int dy, int dw, int dh)
 
     struct VertexF* vertices;
     float start, end, slsz_scaled;
-    slsz_scaled = ceil((float)(dw + 1) * SLICE_SIZE / Viewport_Width);
+    slsz_scaled = ceil((float)dw * SLICE_SIZE / Viewport_Width);
 
     for (start = Viewport_X, end = Viewport_X + Viewport_Width; start < end; start += SLICE_SIZE, dx += slsz_scaled) {
         vertices = (struct VertexF*)sceGuGetMemory(2 * sizeof(struct VertexF));

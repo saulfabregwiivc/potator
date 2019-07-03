@@ -10,6 +10,7 @@
 #include "supervision.h"
 
 #include "minimal.h"
+#include "menues.h"
 
 BOOL paused = FALSE;
 
@@ -26,6 +27,11 @@ unsigned short screenbuffer[161 * 161];
 const char *romname;
 
 currentConfig_t currentConfig;
+
+uint16 mapRGB(uint8 r, uint8 g, uint8 b)
+{
+    return gp2x_video_RGB_color16(r, g, b);
+}
 
 int LoadROM(const char *filename)
 {
@@ -115,11 +121,6 @@ void CheckKeys(void)
     }
 }
 
-uint16 mapRGB(uint8 r, uint8 g, uint8 b)
-{
-    return gp2x_video_RGB_color16(r, g, b);
-}
-
 int main(int argc, char *argv[])
 {
     gp2x_init(1000, 16, 11025, 16, 1, 60, 1);
@@ -166,11 +167,16 @@ int main(int argc, char *argv[])
             CheckKeys(); //key control
 
             switch(currentConfig.videoMode){
-            case 0:
+            case 0: {
+                int j;
                 supervision_exec(screenbuffer);
-
-                for (j = 0; j < 160; j++) 
-                     gp2x_memcpy(screen16+(80+(j+40)*320), screenbuffer+(j * 160), 160*2);
+                for (j = 0; j < 160; j++)
+                    gp2x_memcpy(screen16+(80+(j+40)*320), screenbuffer+(j * 160), 160*2);
+            }
+                break;
+            case 1:
+            case 2:
+                supervision_exec(screen16);
                 break;
             default:
                 break;

@@ -471,7 +471,9 @@ void screen_showmainmenu(MENU *menu) {
 		if (gameMenu) {
 			screen_showmenu(menu); // show menu items
 			if (menu == &mnuMainMenu) {
-				print_string("V1.1", COLOR_LIGHT,COLOR_BG, 294,29);
+				int len = snprintf(szVal, sizeof(szVal), "V1.1 (core: %u.%u.%u)",
+					SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+				print_string(szVal, COLOR_LIGHT,COLOR_BG, 320-len*6,29);
 				if (cartridge_IsLoaded()) {
 #ifdef _OPENDINGUX_
 					sprintf(szVal,"Game:%s",strrchr(gameName,'/')+1);szVal[(320/6)-2] = '\0'; 
@@ -547,7 +549,7 @@ void findNextFilename(char *szFileFormat, char *szFilename) {
 	uint32_t uBcl;
 	int fp;
   
-	for (uBcl = 0; uBcl<999; uBcl++) {
+	for (uBcl = 0; uBcl<1000; uBcl++) {
 		sprintf(szFilename,szFileFormat,uBcl);
 		fp = open(szFilename,O_RDONLY | O_BINARY);
 		if (fp <0) break;
@@ -607,7 +609,7 @@ int sort_function(const void *src_str_ptr, const void *dest_str_ptr) {
 }
 
 int strcmp_function(char *s1, char *s2) {
-	char i;
+	unsigned i;
 	
 	if (strlen(s1) != strlen(s2)) return 1;
 
@@ -620,7 +622,7 @@ int strcmp_function(char *s1, char *s2) {
 
 signed int load_file(char **wildcards, char *result) {
 	unsigned char *keys;
-	unsigned int keya=0, keyb=0, keyup=0, kepufl=8, keydown=0, kepdfl=8, keyleft=0, keyright=0, keyr=0, keyl=0;
+	unsigned int keya=0, keyb=0, keyup=0, kepufl=8, keydown=0, kepdfl=8, keyr=0, keyl=0;
 
 	char current_dir_name[MAX__PATH];
 	DIR *current_dir;
@@ -633,7 +635,6 @@ signed int load_file(char **wildcards, char *result) {
 	char *file_name;
 	unsigned int file_name_length;
 	unsigned int ext_pos = -1;
-	unsigned int dialog_result = 1;
 	signed int return_value = 1;
 	unsigned int repeat;
 	unsigned int i;
@@ -863,15 +864,12 @@ signed int load_file(char **wildcards, char *result) {
 	return return_value;
 }
 
-char *file_ext[] = { (char *) ".sv", (char *) ".bin", NULL };
+char *file_ext[] = { (char *) ".sv", (char *) ".ws", (char *) ".bin", NULL };
 
 void menuFileBrowse(void) {
 	if (load_file(file_ext, gameName) != -1) { // exit if file is chosen
 		gameMenu=false;
 		m_Flag = GF_GAMEINIT;
-		// free memory if another game is loaded
-		if (cartridge_IsLoaded()) 
-			supervision_done();
 	}
 }
 
@@ -885,14 +883,7 @@ void menuSaveBmp(void) {
 #else
 		sprintf(szFile,".\\%s",strrchr(gameName,'\\')+1);
 #endif
-		szFile[strlen(szFile)-8] = '%';
-		szFile[strlen(szFile)-7] = '0';
-		szFile[strlen(szFile)-6] = '3';
-		szFile[strlen(szFile)-5] = 'd';
-		szFile[strlen(szFile)-4] = '.';
-		szFile[strlen(szFile)-3] = 'b';
-		szFile[strlen(szFile)-2] = 'm';
-		szFile[strlen(szFile)-1] = 'p';
+		strcat(szFile, "%03d.bmp");
 
 		print_string("Saving...", COLOR_OK, COLOR_BG, 8,240-5 -10*3);
 		screen_flip();
@@ -954,12 +945,6 @@ void system_loadcfg(char *cfg_name) {
 		SDL_Flip(actualScreen);
 		screen_prepback(actualScreen, POTATOR_SKIN, POTATOR_SKIN_SIZE);
 		SDL_Flip(actualScreen);
-	}
-	switch (GameConf.m_Color) {
-		case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
-		case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;
-		case 2: supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); break;
-		case 3: supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); break;
 	}
   }
   else {

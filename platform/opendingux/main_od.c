@@ -62,8 +62,7 @@ void graphics_paint(void) {
 			unsigned short *buffer_mem=(buffer_flip+((y>>16)*SYSVID_WIDTH));
 			W=320; x=0;
 			do {
-				unsigned short value = (((buffer_mem[x>>16]) & 0x7FE0) << 1) | ((buffer_mem[x>>16]) & 0x001F);
-				*buffer_scr++=value;
+				*buffer_scr++=buffer_mem[x>>16];
 				x+=ix;
 			} while (--W);
 			y+=iy;
@@ -85,8 +84,7 @@ void graphics_paint(void) {
 			unsigned short *buffer_mem=(buffer_flip+((y>>16)*SYSVID_WIDTH));
 			W=SYSVID_WIDTH; x=((actualScreen->w - SYSVID_WIDTH)/2);
 			do {
-				unsigned short value = (((buffer_mem[x>>16]) & 0x7FE0) << 1) | ((buffer_mem[x>>16]) & 0x001F);
-				*buffer_scr++=value;
+				*buffer_scr++=buffer_mem[x>>16];
 				x+=ix;
 			} while (--W);
 			y+=iy;
@@ -147,9 +145,6 @@ void initSDL(void) {
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 	SDL_JoystickEventState(SDL_ENABLE);
 	stick = SDL_JoystickOpen(0);
-	
-	// Init sound
-	Ainit();
 }
 
 uint16 mapRGB(uint8 r, uint8 g, uint8 b) {
@@ -171,6 +166,12 @@ unsigned char potatorLoadROM(char* filename) {
 
 		supervision_load(rom_buffer, rom_size);
 		supervision_set_map_func(mapRGB);
+		switch (GameConf.m_Color) {
+			case 0: supervision_set_color_scheme(SV_COLOR_SCHEME_DEFAULT); break;
+			case 1: supervision_set_color_scheme(SV_COLOR_SCHEME_AMBER); break;
+			case 2: supervision_set_color_scheme(SV_COLOR_SCHEME_GREEN); break;
+			case 3: supervision_set_color_scheme(SV_COLOR_SCHEME_BLUE); break;
+		}
 
 		// Compute game CRC
 		gameCRC = crc32(0, rom_buffer, rom_size);
@@ -182,7 +183,6 @@ unsigned char potatorLoadROM(char* filename) {
 }
 
 int main(int argc, char *argv[]) {
-	unsigned int index;
 	double period;
 
 	// Get init file directory & name
@@ -276,7 +276,6 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 	}
-	Aclose();
 	
 	// Free memory
 	SDL_FreeSurface(layerbackgrey);

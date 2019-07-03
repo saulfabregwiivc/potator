@@ -563,7 +563,8 @@
       <table><tbody id="savestates"></tbody></table>
 
       <h2>Information</h2>
-      Source code: <a href="https://github.com/infval/potator">GitHub</a>.
+      <p>Chrome <a href="https://blog.google/products/chrome/improving-autoplay-chrome/">blocks audio autoplay</a>. Click on game view (canvas) or press any key.</p>
+      <p>Source code: <a href="https://github.com/infval/potator">GitHub</a>.</p>
     </div>
     <div class="emscripten" id="status" style="position: fixed; top: 0px; background-color: #eee; padding: 8px;">Downloading...</div>
     <div class="emscripten"><progress value="0" max="100" id="progress" style="display: none;"></progress></div>
@@ -762,16 +763,51 @@
       pauseAudio(0);
     }, false);
 
-    // FIX (Chrome, ...?), project.js -> ASM_CONSTS, https://github.com/emscripten-ports/SDL2/blob/master/src/audio/emscripten/SDL_emscriptenaudio.c
+    // FIX (Chrome, ...?), project.js -> ASM_CONSTS,
+    // https://github.com/emscripten-ports/SDL2/blob/master/src/audio/emscripten/SDL_emscriptenaudio.c
     function pauseAudio(on) {
-      if (typeof SDL2 === 'undefined') return;
+      if (typeof Module === 'undefined') return;
+      let moduleSDL2 = Module.SDL2;
+      if (typeof moduleSDL2 === 'undefined' && typeof SDL2 !== 'undefined')
+        moduleSDL2 = SDL2; // Old emscripten
+      else
+        return;
+      //if (typeof Module === 'undefined'
+      //  || typeof Module.SDL2 === 'undefined'
+      //  || typeof Module.SDL2.audio === 'undefined'
+      //  || typeof Module.SDL2.audioContext === 'undefined')
+      //  return;
       if (on) {
-        SDL2.audio.scriptProcessorNode.disconnect();
+        moduleSDL2.audio.scriptProcessorNode.disconnect();
       }
       else {
-        SDL2.audio.scriptProcessorNode['connect'](SDL2.audioContext['destination']);
+        moduleSDL2.audio.scriptProcessorNode['connect'](moduleSDL2.audioContext['destination']);
       }
     }
+
+    // Work-around chromium autoplay policy
+    // https://github.com/emscripten-core/emscripten/issues/6511
+    function resumeAudio(e) {
+      if (typeof Module === 'undefined') return;
+      let moduleSDL2 = Module.SDL2;
+      if (typeof moduleSDL2 === 'undefined' && typeof SDL2 !== 'undefined')
+        moduleSDL2 = SDL2; // Old emscripten
+      else
+        return;
+      //if (typeof Module === 'undefined'
+      //  || typeof Module.SDL2 === 'undefined'
+      //  || typeof Module.SDL2.audioContext === 'undefined')
+      //  return;
+      if (moduleSDL2.audioContext.state == 'suspended') {
+        moduleSDL2.audioContext.resume();
+      }
+      if (moduleSDL2.audioContext.state == 'running') {
+        document.getElementById('canvas').removeEventListener('click', resumeAudio);
+        document.removeEventListener('keydown', resumeAudio);
+      }
+    }
+    document.getElementById('canvas').addEventListener('click', resumeAudio);
+    document.addEventListener('keydown', resumeAudio);
 
     function refreshSavestates() {
       var fileNames = FS.readdir(".").filter((e) => e.search(/\.svst$/) != -1);

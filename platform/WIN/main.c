@@ -34,6 +34,7 @@ volatile BOOL finished = FALSE;
 volatile BOOL execute = FALSE;
 
 LPCTSTR szClassName = _T("Potator (WinAPI)");
+LPCTSTR VERSION = _T("1.0.1");
 #define WINDOW_STYLE (WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION | WS_VISIBLE)
 #define WINDOW_EX_STYLE (WS_EX_CLIENTEDGE)
 
@@ -145,7 +146,7 @@ DWORD WINAPI run(LPVOID lpParameter)
                 INT16* dst = (INT16*)audioBuffer;
                 UINT8* src = (UINT8*)audioBuffer;
                 for (int i = BUFFER_SIZE / 2 - 1; i >= 0; i--) {
-                    dst[i] = src[i] << 8;
+                    dst[i] = src[i] << (8 + 1);
                 }
                 waveOutPrepareHeader(hWaveOut, &whdr, sizeof(whdr));
                 waveOutWrite(hWaveOut, &whdr, sizeof(whdr));
@@ -404,10 +405,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_ABOUT:
         {
-            TCHAR title[64] = { 0 };
-            _sntprintf_s(title, _countof(title), _TRUNCATE, _T("Potator (WinAPI) %u.%u.%u (core: %u.%u.%u)"),
-                1, 0, 0, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
-            MessageBox(NULL, title, szClassName, MB_ICONEXCLAMATION | MB_OK);
+            TCHAR text[64] = { 0 };
+            _sntprintf_s(text, _countof(text), _TRUNCATE, _T("%s %s (core: %u.%u.%u)"),
+                szClassName, VERSION, SV_CORE_VERSION_MAJOR, SV_CORE_VERSION_MINOR, SV_CORE_VERSION_PATCH);
+            MessageBox(NULL, text, _T("About"), MB_ICONEXCLAMATION | MB_OK);
         }
             break;
         case IDM_FULLSCREEN:

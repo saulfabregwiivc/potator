@@ -21,7 +21,7 @@ FileEntry FileList[1024];
 uint32 fileCounter;
 
 extern uint8* buffer;
-extern unsigned int buffer_size;
+extern unsigned int bufferSize;
 extern void LoadROM(char* filename);
 extern uint16 mapRGB(uint8 r, uint8 g, uint8 b);
 
@@ -269,7 +269,7 @@ void handleFileMenu(void)
 				RESIZE();
 				LoadROM(FileList[curFile + virtualFile].fName);
 				textClear();
-				supervision_load(buffer, (uint32)buffer_size);
+				supervision_load(buffer, (uint32)bufferSize);
 				supervision_set_map_func(mapRGB);
 				textClear();
 				return;
@@ -356,8 +356,8 @@ void handleOptionsMenu(void)
 
 		if(pad & GP2X_RIGHT) {
 			if(menuOption == OPTION_VIDEOMODE) if(videomode < 2) currentConfig.videoMode++;
-			if(menuOption == OPTION_SHOWFPS) if(currentConfig.show_fps==0) currentConfig.show_fps=1; else currentConfig.show_fps=0;
-			if(menuOption == OPTION_ENABLESOUND) if(currentConfig.enable_sound==0) currentConfig.enable_sound=1; else currentConfig.enable_sound=0;
+			if(menuOption == OPTION_SHOWFPS) currentConfig.show_fps^=1;
+			if(menuOption == OPTION_ENABLESOUND) currentConfig.enable_sound^=1;
 			if(menuOption == OPTION_SOUNDRATE) currentConfig.SoundRate*=2;
 			if(menuOption == OPTION_FRAMESKIP) if (frameskip < 9) frameskip++;
 			if(menuOption == OPTION_CPUCLOCK) if(clock < sizeof(clocklist)) clock++;
@@ -366,8 +366,8 @@ void handleOptionsMenu(void)
 			
 		if(pad & GP2X_LEFT) {
 			if(menuOption == OPTION_VIDEOMODE) if(videomode > 0) currentConfig.videoMode--;
-			if(menuOption == OPTION_SHOWFPS) if(currentConfig.show_fps==0) currentConfig.show_fps=1; else currentConfig.show_fps=0;
-			if(menuOption == OPTION_ENABLESOUND) if(currentConfig.enable_sound==0) currentConfig.enable_sound=1; else currentConfig.enable_sound=0;
+			if(menuOption == OPTION_SHOWFPS) currentConfig.show_fps^=1;
+			if(menuOption == OPTION_ENABLESOUND) currentConfig.enable_sound^=1;
 			if(menuOption == OPTION_SOUNDRATE) currentConfig.SoundRate/=2;
 			if(menuOption == OPTION_FRAMESKIP) if (frameskip > 0) frameskip--;
 			if(menuOption == OPTION_CPUCLOCK) if(clock > 0) clock--;
