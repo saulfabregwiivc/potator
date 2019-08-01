@@ -3,6 +3,6 @@
 A Watara Supervision Emulator based on Normmatt version.
 
 ## Previous README
-https://github.com/infval/potator/tree/master/platform/opendingux
+[/platform/opendingux](/platform/opendingux)
 
-https://github.com/infval/potator/tree/master/platform/GP2X
+[/platform/GP2X](/platform/GP2X)
