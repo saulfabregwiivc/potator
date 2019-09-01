@@ -33,7 +33,6 @@ EXESUFFIX = .dge
 CC  = $(TOOLCHAIN)/bin/mipsel-linux-gcc
 CCP = $(TOOLCHAIN)/bin/mipsel-linux-g++
 LD  = $(TOOLCHAIN)/bin/mipsel-linux-g++
-endif
 
 
 # add SDL dependencies
@@ -58,6 +57,7 @@ endif
 CFLAGS		= -I$(SDL_INCLUDE) -D_OPENDINGUX_ $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
+endif
 ifeq "$(OSTYPE)" "retrofwrs97"
 CC_OPTS		= -O2 -mips32 -msoft-float -G0  -D_ODSDL_ -DMAX__PATH=1024  $(F_OPTS)
 CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
@@ -90,3 +90,4 @@ $(OBJ_CP) : %.o : %.cpp
 
 clean:
 	rm -f $(PRGNAME)$(EXESUFFIX) *.o
+
