@@ -20,8 +20,8 @@
 
 void memory_init(void);
 void memory_done(void);
-void memory_malloc_secure(void **new_ptr, UINT32 size, char *info);
-void *memory_malloc(UINT32 size, char *info);
+void memory_malloc_secure(void **new_ptr, uint32 size, char *info);
+void *memory_malloc(uint32 size, char *info);
 void memory_free(void *ptr);
 void memory_memoryUsage(FILE *fp);
 
