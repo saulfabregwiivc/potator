@@ -1,9 +1,10 @@
 # Define compilation type
-OSTYPE=msys
+#OSTYPE=msys
 #OSTYPE=oda320
 #OSTYPE=odgcw
+OSTYPE=retrofwrs97
 
-PRGNAME     = potator-od
+PRGNAME     = potator
 
 # define regarding OS, which compiler to use
 ifeq "$(OSTYPE)" "msys"	
@@ -23,10 +24,22 @@ CC  = $(TOOLCHAIN)/bin/mipsel-linux-gcc
 CCP = $(TOOLCHAIN)/bin/mipsel-linux-g++
 LD  = $(TOOLCHAIN)/bin/mipsel-linux-g++
 endif
+ifeq "$(OSTYPE)" "retrofwrs97"
+TOOLCHAIN = /opt/mipsel-linux-uclibc
+else
+TOOLCHAIN = /opt/rs97tools
+endif
+EXESUFFIX = .dge
+CC  = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+CCP = $(TOOLCHAIN)/bin/mipsel-linux-g++
+LD  = $(TOOLCHAIN)/bin/mipsel-linux-g++
+endif
+
 
 # add SDL dependencies
 SDL_LIB     = $(TOOLCHAIN)/lib
 SDL_INCLUDE = $(TOOLCHAIN)/include
+
 
 # change compilation / linking flag options
 ifeq "$(OSTYPE)" "msys"	
@@ -45,10 +58,15 @@ endif
 CFLAGS		= -I$(SDL_INCLUDE) -D_OPENDINGUX_ $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
+ifeq "$(OSTYPE)" "retrofwrs97"
+CC_OPTS		= -O2 -mips32 -msoft-float -G0  -D_ODSDL_ -DMAX__PATH=1024  $(F_OPTS)
+CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
+CXXFLAGS	= $(CFLAGS) 
+LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
 endif
 
 # Files to be compiled
-SRCDIR    = ./common/m6502 ./common ./platform/opendingux
+SRCDIR    = ./common/m6502 ./common ./platform/rs97
 VPATH     = $(SRCDIR)
 SRC_C   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 SRC_CP   = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.cpp))
