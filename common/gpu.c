@@ -45,9 +45,9 @@ static uint8    gpu_regs[4];
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_init(void)
 {
-	//#ifdef DEBUG
+	#ifdef DEBUG
 	printf("Gpu Init\n");
-	//#endif
+	#endif
 	//fprintf(log_get(), "gpu: init\n");
 	memory_malloc_secure((void**)&supervision_palette,  4*sizeof(int16), "Palette");
 }
@@ -75,9 +75,9 @@ void gpu_done(void)
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_reset(void)
 {
-	//#ifdef DEBUG
+	#ifdef DEBUG
 	printf("Gpu Reset\n");
-	//#endif
+	#endif
 
 #ifdef GP2X
 	supervision_palette[3] = gp2x_video_RGB_color16(0,0,0);
@@ -124,9 +124,9 @@ void gpu_reset(void)
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_set_colour_scheme(int colourScheme)
 {
-	//#ifdef DEBUG
+	#ifdef DEBUG
 	printf("Gpu Set Color Scheme\n");
-	//#endif
+	#endif
 
 	float greenf=1;
 	float bluef=1;
