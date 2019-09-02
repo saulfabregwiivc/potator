@@ -59,8 +59,8 @@ CXXFLAGS	= $(CFLAGS)
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
 endif
 ifeq "$(OSTYPE)" "retrofwrs97"
-CC_OPTS		= -O2 -mips32 -msoft-float -G0  -D_ODSDL_ -DMAX__PATH=1024  $(F_OPTS)
-CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
+CC_OPTS		= -O2 -mips32 -mhard-float -G0  -D_OPENDINGUX_  $(F_OPTS)
+CFLAGS		= -I$(SDL_INCLUDE) -DOPENDINGUX $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
 endif
