@@ -22,6 +22,9 @@
 #ifdef _ODSDL_
 #include "../platform/opendingux/shared.h"
 #endif
+#ifdef _OPENDINGUX_
+#include "../platform/opendingux/shared.h"
+#endif
 
 static uint16	*supervision_palette;
 static uint8    gpu_regs[4];
@@ -42,9 +45,9 @@ static uint8    gpu_regs[4];
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_init(void)
 {
-	#ifdef DEBUG
+	//#ifdef DEBUG
 	printf("Gpu Init\n");
-	#endif
+	//#endif
 	//fprintf(log_get(), "gpu: init\n");
 	memory_malloc_secure((void**)&supervision_palette,  4*sizeof(int16), "Palette");
 }
@@ -72,9 +75,9 @@ void gpu_done(void)
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_reset(void)
 {
-	#ifdef DEBUG
+	//#ifdef DEBUG
 	printf("Gpu Reset\n");
-	#endif
+	//#endif
 
 #ifdef GP2X
 	supervision_palette[3] = gp2x_video_RGB_color16(0,0,0);
@@ -101,6 +104,12 @@ void gpu_reset(void)
 	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,170,170,170);
 	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,240,240,240);
 #endif
+#ifdef _OPENDINGUX_
+    supervision_palette[3] = PIX_TO_RGB(actualScreen->format,0,0,0);
+	supervision_palette[2] = PIX_TO_RGB(actualScreen->format,85,85,85);
+	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,170,170,170);
+	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,240,240,240);
+#endif
 
 	memset(gpu_regs, 0, 4);
 }
@@ -115,9 +124,9 @@ void gpu_reset(void)
 ////////////////////////////////////////////////////////////////////////////////
 void gpu_set_colour_scheme(int colourScheme)
 {
-	#ifdef DEBUG
+	//#ifdef DEBUG
 	printf("Gpu Set Color Scheme\n");
-	#endif
+	//#endif
 
 	float greenf=1;
 	float bluef=1;
@@ -167,6 +176,15 @@ void gpu_set_colour_scheme(int colourScheme)
 
 #ifdef _ODSDL_
 	int p11 = (int) 85*redf; int p12 = (int) 85*greenf; int p13 = (int) 85*bluef;
+	int p21 = (int) 170*redf; int p22 = (int) 170*greenf; int p23 = (int) 170*bluef;
+	int p31 = (int) 255*redf; int p32 = (int) 255*greenf; int p33 = (int) 255*bluef;
+    supervision_palette[3] = PIX_TO_RGB(actualScreen->format,0,0,0);
+	supervision_palette[2] = PIX_TO_RGB(actualScreen->format,p11, p12, p13);
+	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,p21, p22, p23);
+	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,p31, p32, p33);
+#endif
+#ifdef _OPENDINGUX_
+    	int p11 = (int) 85*redf; int p12 = (int) 85*greenf; int p13 = (int) 85*bluef;
 	int p21 = (int) 170*redf; int p22 = (int) 170*greenf; int p23 = (int) 170*bluef;
 	int p31 = (int) 255*redf; int p32 = (int) 255*greenf; int p33 = (int) 255*bluef;
     supervision_palette[3] = PIX_TO_RGB(actualScreen->format,0,0,0);
