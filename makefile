@@ -87,7 +87,18 @@ $(OBJ_C) : %.o : %.c
 
 $(OBJ_CP) : %.o : %.cpp
 	$(CCP) $(CXXFLAGS) -c -o $@ $<
-
+# Big thanks to pingflood for this ipk code!
+ipk:  $(BUILD) $(TARGET)
+	@rm -rf /tmp/.potator-ipk/ && mkdir -p /tmp/.potator-ipk/root/home/retrofw/emus/potator /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
+	@cp -r potator.dge distrib/potator/icon.png /tmp/.potator-ipk/root/home/retrofw/emus/potator
+	@cp distrib/potator/potator.lnk /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators
+	@sed "s/^Version:.*/Version: $$(date +%Y%m%d)/" ipkfiles/control > /tmp/.potator-ipk/control
+	@cp ipkfiles/conffiles /tmp/.potator-ipk/
+	@tar --owner=0 --group=0 -czvf /tmp/.potator-ipk/control.tar.gz -C /tmp/.potator-ipk/ control conffiles
+	@tar --owner=0 --group=0 -czvf /tmp/.potator-ipk/data.tar.gz -C /tmp/.potator-ipk/root/ .
+	@echo 2.0 > /tmp/.potator-ipk/debian-binary
+	@ar r potator.ipk /tmp/.potator-ipk/control.tar.gz /tmp/.potator-ipk/data.tar.gz /tmp/.potator-ipk/debian-binary
+	
 clean:
-	rm -f $(PRGNAME)$(EXESUFFIX) *.o
+	rm -f $(PRGNAME)$(EXESUFFIX) *.o *.ipk 
 
