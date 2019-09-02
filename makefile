@@ -90,7 +90,7 @@ $(OBJ_CP) : %.o : %.cpp
 # Big thanks to pingflood for this ipk code!
 ipk:  $(BUILD) $(TARGET)
 	@rm -rf /tmp/.potator-ipk/ && mkdir -p /tmp/.potator-ipk/root/home/retrofw/emus/potator /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators.systems
-	@cp -r potator.dge distrib/potator/icon.png /tmp/.potator-ipk/root/home/retrofw/emus/potator
+	@cp -r potator.dge distrib/potator/potator.png /tmp/.potator-ipk/root/home/retrofw/emus/potator
 	@cp distrib/potator/potator.lnk /tmp/.potator-ipk/root/home/retrofw/apps/gmenu2x/sections/emulators
 	@sed "s/^Version:.*/Version: $$(date +%Y%m%d)/" ipkfiles/control > /tmp/.potator-ipk/control
 	@cp ipkfiles/conffiles /tmp/.potator-ipk/
