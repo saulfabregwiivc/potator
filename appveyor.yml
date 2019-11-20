@@ -1,8 +1,8 @@
 version: 1.0.{build}
-image: Visual Studio 2017
+image: Visual Studio 2019
 clone_folder: c:\projects\potator
 environment:
-  SDL_VERSION: 2.0.9
+  SDL_VERSION: 2.0.10
 install:
 - ps: >-
     New-Item c:\projects\sdl -type directory
@@ -13,19 +13,15 @@ install:
 
     Start-FileDownload "https://www.libsdl.org/release/SDL2-devel-${env:SDL_VERSION}-VC.zip"
 
-    Start-FileDownload "https://www.libsdl.org/release/SDL2-${env:SDL_VERSION}-win32-x86.zip"
-
     7z x SDL2-devel-${env:SDL_VERSION}-VC.zip
 
-    7z x SDL2-${env:SDL_VERSION}-win32-x86.zip
-
-    Copy-Item SDL2.dll c:\projects\potator\artifacts\
+    Copy-Item SDL2-${env:SDL_VERSION}\lib\x86\SDL2.dll c:\projects\potator\artifacts\
 
     cd c:\projects\potator\platform\SDL2\
 
     Copy-Item sdl2-config.cmake c:\projects\sdl\SDL2-${env:SDL_VERSION}
 
-    cmake -DSDL2_DIR=c:\projects\sdl\SDL2-${env:SDL_VERSION} -DCMAKE_CONFIGURATION_TYPES=Release ./
+    cmake -DSDL2_DIR=c:\projects\sdl\SDL2-${env:SDL_VERSION} -DCMAKE_CONFIGURATION_TYPES=Release -DCMAKE_GENERATOR_PLATFORM=Win32 ./
 build:
   verbosity: minimal
 after_build:

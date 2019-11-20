@@ -6,6 +6,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 //#include <commctrl.h>
 //#pragma comment(lib, "Comctl32.lib")
 #include <stdlib.h>
+#include <stdio.h>
 #include <tchar.h>
 
 // PathFindFileName()
