@@ -98,7 +98,6 @@ ipk:  $(BUILD) $(TARGET)
 	@tar --owner=0 --group=0 -czvf /tmp/.potator-ipk/data.tar.gz -C /tmp/.potator-ipk/root/ .
 	@echo 2.0 > /tmp/.potator-ipk/debian-binary
 	@ar r potator.ipk /tmp/.potator-ipk/control.tar.gz /tmp/.potator-ipk/data.tar.gz /tmp/.potator-ipk/debian-binary
-	
 clean:
-	rm -f $(PRGNAME)$(EXESUFFIX) *.o *.ipk 
+	rm -f $(PRGNAME)$(EXESUFFIX) *.o *.ipk *.opk
 
