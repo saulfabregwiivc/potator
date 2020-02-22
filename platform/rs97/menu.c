@@ -5,7 +5,6 @@
 #include "./data/potator_background.h"
 #include "./data/potator_load.h"
 #include "./data/potator_skin.h"
-#include "string.h"
 
 extern unsigned int m_Flag;
 
