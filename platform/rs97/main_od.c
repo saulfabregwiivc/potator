@@ -154,7 +154,8 @@ void initSDL(void) {
 
 unsigned char potatorLoadROM(char* filename) {
 	unsigned int length;
-
+    fprintf(stderr, "\n IN the loading rom portion\n");
+    fprintf(stderr, filename);
 	if (rom_buffer != NULL)
 		free(rom_buffer);
 
@@ -190,19 +191,20 @@ int main(int argc, char *argv[]) {
 	initSDL();
 	
 	SDL_WM_SetCaption("potator", NULL);
-
     //load rom file via args if a rom path is supplied
 	if(argc > 1) {
 		strcpy(gameName,argv[1]);
 		m_Flag = GF_GAMEINIT;
-	}
+    }
 
 	// Initialize the virtual console emulation 
 	supervision_init();
-
-	m_Flag = GF_MAINUI;
+    
+    //Make sure loading a rom is not already set to happen before loading main interface
+    if(m_Flag != GF_GAMEINIT){
+        m_Flag = GF_MAINUI;
+    }
 	system_loadcfg(current_conf_app);
-
 	while (m_Flag != GF_GAMEQUIT) {
 		SDL_PollEvent(&event);
 		unsigned char *keys = SDL_GetKeyState(NULL);
@@ -261,6 +263,9 @@ int main(int argc, char *argv[]) {
 				if ( (keys[SDLK_ESCAPE] == SDL_PRESSED) && (keys[SDLK_RETURN] == SDL_PRESSED ) ) {
 					m_Flag = GF_MAINUI;
 				}
+				if ( (keys[SDLK_END] == SDL_PRESSED) ){
+                    m_Flag = GF_MAINUI;
+                }
 				else if ( (keys[SDLK_RETURN] == SDL_PRESSED) ) controls_state |=  keyCoresp[GameConf.OD_Joy[10]]; // START
 				else if ( (keys[SDLK_ESCAPE] == SDL_PRESSED) )  controls_state |=  keyCoresp[GameConf.OD_Joy[11]]; // SELECT
 

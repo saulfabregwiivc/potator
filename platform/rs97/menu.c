@@ -5,6 +5,7 @@
 #include "./data/potator_background.h"
 #include "./data/potator_load.h"
 #include "./data/potator_skin.h"
+#include "string.h"
 
 extern unsigned int m_Flag;
 
@@ -197,9 +198,10 @@ MENUITEM MainMenuItems[] = {
 	{"Button Settings", NULL, 0, NULL, &screen_showkeymenu},
 	{"Take Screenshot", NULL, 0, NULL, &menuSaveBmp},
 	{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1,(char *) &mnuYesNo, NULL},
+	{"About Potator", NULL, 0, NULL,&menuAbout},
 	{"Exit", NULL, 0, NULL, &menuQuit}
 };
-MENU mnuMainMenu = { 9, 0, (MENUITEM *) &MainMenuItems };
+MENU mnuMainMenu = { 10, 0, (MENUITEM *) &MainMenuItems };
 
 MENUITEM ConfigMenuItems[] = {
 	{"Button A: ", (int *) &GameConf.OD_Joy[4], 6, (char *)  &mnuButtons, NULL},
@@ -325,8 +327,8 @@ void screen_showmenu(MENU *menu) {
 		int fg_color;
 
 		if(menu->itemCur == i) fg_color = COLOR_ACTIVE_ITEM; else fg_color = COLOR_INACTIVE_ITEM;
-		screen_showitem(SPRX+10, 59+i*15, mi, fg_color);
-		if(menu->itemCur == i) print_string("-", fg_color, COLOR_BG, SPRX+10-12, 59+i*15);
+		screen_showitem(SPRX+10, 51+i*15, mi, fg_color); 
+		if(menu->itemCur == i) print_string("-", fg_color, COLOR_BG, SPRX+10-12, 51+i*15);
 	}
 }
 
@@ -471,10 +473,13 @@ void screen_showmainmenu(MENU *menu) {
 		if (gameMenu) {
 			screen_showmenu(menu); // show menu items
 			if (menu == &mnuMainMenu) {
-				print_string("V1.1", COLOR_LIGHT,COLOR_BG, 294,29);
+				print_string("Build: 20200220", COLOR_LIGHT,COLOR_BG, 220,29);
 				if (cartridge_IsLoaded()) {
 #ifdef _OPENDINGUX_
 					sprintf(szVal,"Game:%s",strrchr(gameName,'/')+1);szVal[(320/6)-2] = '\0'; 
+#endif
+#ifdef _RS97_
+                    sprintf(szVal,"Game:%s",strrchr(gameName,'/')+1);szVal[(320/6)-2] = '\0'; 
 #else
 					sprintf(szVal,"Game:%s",strrchr(gameName,'\\')+1);szVal[(320/6)-2] = '\0'; 
 #endif
@@ -755,6 +760,9 @@ signed int load_file(char **wildcards, char *result) {
 						return_value = 0;
 #ifdef _OPENDINGUX_
 						sprintf(result, "%s/%s", current_dir_name, filedir_list[current_filedir_selection].name);
+#endif
+#ifdef _RS97_
+						sprintf(result, "%s/%s", current_dir_name, filedir_list[current_filedir_selection].name);
 #else
 						sprintf(result, "%s\\%s", current_dir_name, filedir_list[current_filedir_selection].name);
 #endif
@@ -881,6 +889,9 @@ void menuSaveBmp(void) {
 	if (cartridge_IsLoaded()) {
 #ifdef _OPENDINGUX_
 		sprintf(szFile,"./%s",strrchr(gameName,'/')+1);
+#endif
+#ifdef _RS97_
+		sprintf(szFile,"./%s",strrchr(gameName,'/')+1);
 #else
 		sprintf(szFile,".\\%s",strrchr(gameName,'\\')+1);
 #endif
@@ -943,7 +954,8 @@ void menuReturn(void) {
 
 void system_loadcfg(char *cfg_name) {
   int fd;
-
+//fprintf(stderr,"\nLoading Cfg\n");
+//fprintf(stderr,cfg_name);
   fd = open(cfg_name, O_RDONLY | O_BINARY);
   if (fd >= 0) {
 	read(fd, &GameConf, sizeof(GameConf));
@@ -998,7 +1010,54 @@ void gethomedir(char *dir, char* name) {
 	}
 	sprintf(dir,"%s//.%s//",dir, name);
 	mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.config/program if it doesn't exist
+#endif
+#ifdef _RS97_
+	strcpy(dir, getenv("HOME"));
+	if (strlen(dir) == 0) {
+		getcwd(dir, 256);
+	}
+	sprintf(dir,"%s//.%s//",dir, name);
+	mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.config/program if it doesn't exist
 #else
 	getcwd(dir, 256);
 #endif
+}
+
+void menuAbout(){
+    unsigned char *keys;
+    unsigned int keyb = 0;
+    int repeat = 1;
+    int return_value;
+    int fg_color = COLOR_INACTIVE_ITEM;
+    // Code taken from file selector. In short traps it and displays stuff on screen.
+    while(repeat) {
+			screen_prepback(layer, POTATOR_LOAD, POTATOR_LOAD_SIZE);
+            print_string("Credit goes to:",COLOR_ACTIVE_ITEM,COLOR_BG, 110,50);
+            print_string("Cal2 and Normmat for potator source code", fg_color,COLOR_BG,20, 65);
+            print_string("Mess Team for supervision driver",fg_color,COLOR_BG,20,80);
+            print_string("d_smargin for handy_a320 gui", fg_color,COLOR_BG,20,95);
+            print_string("qbertaddict for testing", fg_color,COLOR_BG,20,110);
+            print_string("hi-ban for the skin", fg_color,COLOR_BG,20,125);
+            print_string("Alekmaul for porting to GCW Zero", fg_color,COLOR_BG,20,140);
+            print_string("Retrofw port exists thanks to these people", COLOR_KO,COLOR_BG,20,155);
+			print_string("Press B to return to the main menu", COLOR_HELP_TEXT, COLOR_BG, 160-(34*8/2), 240-5 -10*3);
+
+			// Catch input
+			SDL_PollEvent(&event);
+			keys = SDL_GetKeyState(NULL);
+
+			// B - exit or back to previous menu
+			if (keys[SDLK_LALT] == SDL_PRESSED) { 
+				if (!keyb) {
+					keyb = 1; 
+					return_value = -1;
+					repeat = 0;
+				}
+			}
+			else keyb=0;
+
+
+			SDL_Delay(16);
+			screen_flip();
+		}
 }

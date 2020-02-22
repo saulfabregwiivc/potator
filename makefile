@@ -2,6 +2,7 @@
 #OSTYPE=msys
 #OSTYPE=oda320
 #OSTYPE=odgcw
+#OSTYPE=testing
 OSTYPE=retrofwrs97
 
 PRGNAME     = potator
@@ -33,12 +34,17 @@ EXESUFFIX = .dge
 CC  = $(TOOLCHAIN)/bin/mipsel-linux-gcc
 CCP = $(TOOLCHAIN)/bin/mipsel-linux-g++
 LD  = $(TOOLCHAIN)/bin/mipsel-linux-g++
-
+ifeq "$(OSTYPE)" "testing"
+TOOLCHAIN = /bin
+CC = gcc
+CCP = g++
+LD = g++
+EXESUFFIX = .dge
+endif
 
 # add SDL dependencies
 SDL_LIB     = $(TOOLCHAIN)/lib
 SDL_INCLUDE = $(TOOLCHAIN)/include
-
 
 # change compilation / linking flag options
 ifeq "$(OSTYPE)" "msys"	
@@ -59,12 +65,17 @@ CXXFLAGS	= $(CFLAGS)
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
 endif
 ifeq "$(OSTYPE)" "retrofwrs97"
-CC_OPTS		= -O2 -mips32 -mhard-float -G0  -D_OPENDINGUX_  $(F_OPTS)
-CFLAGS		= -I$(SDL_INCLUDE) -DOPENDINGUX $(CC_OPTS)
+CC_OPTS		= -O2 -mips32 -mhard-float -G0  -D_RS97_  $(F_OPTS)
+CFLAGS		= -I$(SDL_INCLUDE) $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL
 endif
-
+ifeq "$(OSTYPE)" "testing"
+CC_OPTS = -O2 
+CFLAGS = -I$(SDL_INCLUDE) -DOPENDINGUX $(CC_OPTS)
+CXXFLAGS = $(CFLAGS)
+LDFLAGS = -L$(SDL_LIB) $(CC_OPTS) -lSDL
+endif
 # Files to be compiled
 SRCDIR    = ./common/m6502 ./common ./platform/rs97
 VPATH     = $(SRCDIR)

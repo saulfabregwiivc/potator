@@ -7,3 +7,5 @@ Icon=potator
 Categories=emulators;
 Version=20200219
 X-OD-Manual=readme.txt
+X-OD-Selector=/home/retrofw
+X-OD-Filter=.sv,.bin

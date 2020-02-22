@@ -25,6 +25,9 @@
 #ifdef _OPENDINGUX_
 #include "../platform/opendingux/shared.h"
 #endif
+#ifdef _RS97_
+#include "../platform/rs97/shared.h"
+#endif
 
 static uint16	*supervision_palette;
 static uint8    gpu_regs[4];
@@ -110,6 +113,12 @@ void gpu_reset(void)
 	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,170,170,170);
 	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,240,240,240);
 #endif
+#ifdef _RS97_
+    supervision_palette[3] = PIX_TO_RGB(actualScreen->format,0,0,0);
+	supervision_palette[2] = PIX_TO_RGB(actualScreen->format,85,85,85);
+	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,170,170,170);
+	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,240,240,240);
+#endif
 
 	memset(gpu_regs, 0, 4);
 }
@@ -184,6 +193,15 @@ void gpu_set_colour_scheme(int colourScheme)
 	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,p31, p32, p33);
 #endif
 #ifdef _OPENDINGUX_
+    	int p11 = (int) 85*redf; int p12 = (int) 85*greenf; int p13 = (int) 85*bluef;
+	int p21 = (int) 170*redf; int p22 = (int) 170*greenf; int p23 = (int) 170*bluef;
+	int p31 = (int) 255*redf; int p32 = (int) 255*greenf; int p33 = (int) 255*bluef;
+    supervision_palette[3] = PIX_TO_RGB(actualScreen->format,0,0,0);
+	supervision_palette[2] = PIX_TO_RGB(actualScreen->format,p11, p12, p13);
+	supervision_palette[1] = PIX_TO_RGB(actualScreen->format,p21, p22, p23);
+	supervision_palette[0] = PIX_TO_RGB(actualScreen->format,p31, p32, p33);
+#endif
+#ifdef _RS97_
     	int p11 = (int) 85*redf; int p12 = (int) 85*greenf; int p13 = (int) 85*bluef;
 	int p21 = (int) 170*redf; int p22 = (int) 170*greenf; int p23 = (int) 170*bluef;
 	int p31 = (int) 255*redf; int p32 = (int) 255*greenf; int p33 = (int) 255*bluef;

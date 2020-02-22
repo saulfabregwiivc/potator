@@ -65,4 +65,4 @@ http://www.portabledev.com
 
 
 EDITED!
-This folder is for rs97. It should be identical to the opendingux folder
+This folder is for rs97. It should be similar to the opendingux folder

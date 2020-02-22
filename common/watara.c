@@ -203,7 +203,7 @@ void supervision_exec(int16 *backbuffer, BOOL bRender)
 #ifdef GP2X
 		if(currentConfig.enable_sound) sound_exec(11025/160);
 #else
-		//sound_exec(22050/160);
+		sound_exec(22050/160);
 #endif
 		Run6502(&m6502_registers);
 #ifdef NDS
