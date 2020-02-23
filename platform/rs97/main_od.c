@@ -149,7 +149,7 @@ void initSDL(void) {
 	stick = SDL_JoystickOpen(0);
 	
 	// Init sound
-	//Ainit();
+	Ainit();
 }
 
 unsigned char potatorLoadROM(char* filename) {
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 	}
-	//Aclose();
+	Aclose();
 	
 	// Free memory
 	SDL_FreeSurface(layerbackgrey);
