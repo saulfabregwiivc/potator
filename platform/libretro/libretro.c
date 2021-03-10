@@ -477,7 +477,11 @@ void retro_init(void)
    video_buffer = (uint8_t*)malloc(VIDEO_BUFFER_SIZE * sizeof(uint8_t));
 #endif
 
-   audio_buffer = (int16_t*)malloc(AUDIO_BUFFER_SIZE * sizeof(int16_t));
+   /* Round up actual size to nearest multiple of 128
+    * > Since (AUDIO_BUFFER_SIZE / 2) is an odd number,
+    *   potator can write past the end of the buffer,
+    *   so we need some extra padding... */
+   audio_buffer = (int16_t*)malloc(((AUDIO_BUFFER_SIZE + 0x7F) & ~0x7F) * sizeof(int16_t));
 }
 
 void retro_deinit(void)
