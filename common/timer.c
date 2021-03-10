@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static uint8 timer_regs[2];
-static int32 timer_cycles;
-static BOOL   timer_activated;
+uint8 timer_regs[2];
+int32 timer_cycles;
+BOOL  timer_activated;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -46,7 +46,6 @@ void timer_reset()
 	//fprintf(log_get(), "timer: reset\n");
 	timer_regs[0]=0x00;
 	timer_regs[1]=0x00;
-	timer_regs[2]=0x00;
 
 	timer_cycles = 0;
 	timer_activated = FALSE;

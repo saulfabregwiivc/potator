@@ -65,6 +65,14 @@ void memorymap_init()
 void memorymap_done()
 {
 	//fprintf(log_get(), "memorymap: done\n");
+	memory_free(memorymap_lowerRam);
+	memory_free(memorymap_upperRam);
+	memory_free(memorymap_regs);
+	if (memorymap_programRom)
+	{
+		free(memorymap_programRom);
+		memorymap_programRom = NULL;
+	}
 }
 ////////////////////////////////////////////////////////////////////////////////
 //

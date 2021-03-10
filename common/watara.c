@@ -192,7 +192,7 @@ BOOL supervision_update_input(void)
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-void supervision_exec(int16 *backbuffer, BOOL bRender)
+void supervision_exec(uint16 *backbuffer, BOOL bRender)
 {
 	uint32 supervision_scanline, scan1=0;
 
@@ -326,4 +326,136 @@ int	sv_saveState(char *statepath, int id)
 #endif
 
 	return(1);
+}
+
+uint32 sv_saveStateBufSize(void)
+{
+	return sizeof(m6502_registers) +       /* m6502_registers */
+			 0x2000 +                        /* memorymap_lowerRam */
+			 0x2000 +                        /* memorymap_upperRam */
+			 0x2000 +                        /* memorymap_regs */
+			 sizeof(uint64) +                /* lower_rom_bank_offset */
+			 sizeof(uint64) +                /* upper_rom_bank_offset */
+			 (sizeof(uint8) * 2) +           /* timer_regs */
+			 sizeof(int32) +                 /* timer_cycles */
+			 sizeof(BOOL) +                  /* timer_activated */
+			 (sizeof(uint8) * 4) +           /* gpu_regs */
+			 (sizeof(SVISION_CHANNEL) * 2) + /* m_channel */
+			 sizeof(SVISION_NOISE) +         /* m_noise */
+			 sizeof(SVISION_DMA) +           /* m_dma */
+			 sizeof(uint8);                  /* io_data */
+}
+
+
+BOOL sv_loadStateBuf(const void *data, uint32 size)
+{
+	uint8 *buffer = (uint8*)data;
+	uint64 lower_rom_bank_offset;
+	uint64 upper_rom_bank_offset;
+	uint8 io_data;
+
+	if (!buffer || (size < sv_saveStateBufSize()))
+		return FALSE;
+
+	memcpy(&m6502_registers, buffer, sizeof(m6502_registers));
+	buffer += sizeof(m6502_registers);
+
+	memcpy(memorymap_lowerRam, buffer, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(memorymap_upperRam, buffer, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(memorymap_regs, buffer, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(&lower_rom_bank_offset, buffer, sizeof(uint64));
+	buffer += sizeof(uint64);
+
+	memcpy(&upper_rom_bank_offset, buffer, sizeof(uint64));
+	buffer += sizeof(uint64);
+
+	memcpy(timer_regs, buffer, sizeof(uint8) * 2);
+	buffer += sizeof(uint8) * 2;
+
+	memcpy(&timer_cycles, buffer, sizeof(int32));
+	buffer += sizeof(int32);
+
+	memcpy(&timer_activated, buffer, sizeof(BOOL));
+	buffer += sizeof(BOOL);
+
+	memcpy(gpu_regs, buffer, sizeof(uint8) * 4);
+	buffer += sizeof(uint8) * 4;
+
+	memcpy(m_channel, buffer, sizeof(SVISION_CHANNEL) * 2);
+	buffer += sizeof(SVISION_CHANNEL) * 2;
+
+	memcpy(&m_noise, buffer, sizeof(SVISION_NOISE));
+	buffer += sizeof(SVISION_NOISE);
+
+	memcpy(&m_dma, buffer, sizeof(SVISION_DMA));
+	buffer += sizeof(SVISION_DMA);
+
+	memcpy(&io_data, buffer, sizeof(uint8));
+
+	memorymap_lowerRomBank = memorymap_programRom + lower_rom_bank_offset;
+	memorymap_upperRomBank = memorymap_programRom + upper_rom_bank_offset;
+
+	io_write(0, io_data);
+
+	return TRUE;
+}
+
+BOOL sv_saveStateBuf(void *data, uint32 size)
+{
+	uint8 *buffer                = (uint8*)data;
+	uint64 lower_rom_bank_offset = memorymap_lowerRomBank - memorymap_programRom;
+	uint64 upper_rom_bank_offset = memorymap_upperRomBank - memorymap_programRom;
+	uint8 io_data                = io_read(0);
+
+	if (!buffer || (size < sv_saveStateBufSize()))
+		return FALSE;
+
+	memcpy(buffer, &m6502_registers, sizeof(m6502_registers));
+	buffer += sizeof(m6502_registers);
+
+	memcpy(buffer, memorymap_lowerRam, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(buffer, memorymap_upperRam, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(buffer, memorymap_regs, 0x2000);
+	buffer += 0x2000;
+
+	memcpy(buffer, &lower_rom_bank_offset, sizeof(uint64));
+	buffer += sizeof(uint64);
+
+	memcpy(buffer, &upper_rom_bank_offset, sizeof(uint64));
+	buffer += sizeof(uint64);
+
+	memcpy(buffer, timer_regs, sizeof(uint8) * 2);
+	buffer += sizeof(uint8) * 2;
+
+	memcpy(buffer, &timer_cycles, sizeof(int32));
+	buffer += sizeof(int32);
+
+	memcpy(buffer, &timer_activated, sizeof(BOOL));
+	buffer += sizeof(BOOL);
+
+	memcpy(buffer, gpu_regs, sizeof(uint8) * 4);
+	buffer += sizeof(uint8) * 4;
+
+	memcpy(buffer, m_channel, sizeof(SVISION_CHANNEL) * 2);
+	buffer += sizeof(SVISION_CHANNEL) * 2;
+
+	memcpy(buffer, &m_noise, sizeof(SVISION_NOISE));
+	buffer += sizeof(SVISION_NOISE);
+
+	memcpy(buffer, &m_dma, sizeof(SVISION_DMA));
+	buffer += sizeof(SVISION_DMA);
+
+	memcpy(buffer, &io_data, sizeof(uint8));
+
+	return TRUE;
 }

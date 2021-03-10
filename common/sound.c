@@ -14,54 +14,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <SDL/SDL.h>
-
-typedef struct {
-	unsigned char reg[4];
-	int on;
-	int waveform, volume;
-	int pos;
-	int size;
-	int count;
-} SVISION_CHANNEL;
 SVISION_CHANNEL m_channel[2];
-
-typedef enum  {
-	SVISION_NOISE_Type7Bit,
-	SVISION_NOISE_Type14Bit
-} SVISION_NOISE_Type;
-
-typedef struct  {
-	unsigned char reg[3];
-	int on, right, left, play;
-	SVISION_NOISE_Type type;
-	int state;
-	int volume;
-	int count;
-	double step, pos;
-	int value; // currently simple random function
-} SVISION_NOISE;
 SVISION_NOISE m_noise;
-
-typedef struct  {
-	unsigned char reg[5];
-	int on, right, left;
-	int ca14to16;
-	int start,size;
-	double pos, step;
-	int finished;
-} SVISION_DMA;
 SVISION_DMA m_dma;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////////////////////
-void sound_stream_update(Uint8 *stream, int len) {
+void sound_stream_update(uint8 *stream, int len) {
 	int i, j;
 	SVISION_CHANNEL *channel;
-	short s;
-	unsigned short *left=(unsigned short *) stream;
-	unsigned short *right=(unsigned short *) (stream+1);
+	int16 s;
+	uint16 *left=(uint16 *) stream;
+	uint16 *right=(uint16 *) (stream+1);
 
 	for (i = 0; i < len>>1; i++) {
 		s=0;
@@ -129,7 +94,7 @@ void sound_stream_update(Uint8 *stream, int len) {
 
 		if (m_dma.on) {
 			unsigned char sample;
-			unsigned short addr = m_dma.start + (unsigned) m_dma.pos / 2;
+			uint16 addr = m_dma.start + (unsigned) m_dma.pos / 2;
 			if (addr >= 0x8000 && addr < 0xc000) {
 				sample = Rd6502( (addr & 0x3fff) | m_dma.ca14to16);
 				//sample = machine().root_device().memregion("user1")->base()[(addr & 0x3fff) | m_dma.ca14to16];
@@ -164,7 +129,7 @@ void sound_stream_update(Uint8 *stream, int len) {
 ////////////////////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////////////////////
-void sound_decrement() {
+void sound_decrement(void) {
 	if (m_channel[0].count > 0)
 		m_channel[0].count--;
 	if (m_channel[1].count > 0)
@@ -178,7 +143,7 @@ void sound_decrement() {
 ////////////////////////////////////////////////////////////////////////////////
 void soundport_w(int which, int offset, int data) {
 	SVISION_CHANNEL *channel = &m_channel[which];
-	unsigned short size;
+	uint16 size;
 
 	//m_mixer_channel->update();
 	channel->reg[offset] = data;
