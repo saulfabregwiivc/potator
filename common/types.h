@@ -19,6 +19,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __LIBRETRO__
+#include <stdint.h>
+#endif
+
 #ifdef NULL
 #undef NULL
 #define NULL	0
@@ -75,6 +79,63 @@
 #define s16		int16
 #define s32		int32
 //#define s64		int64
+
+#elif defined(__LIBRETRO__)
+
+/* Use standard types */
+
+#define uint8                   uint8_t
+#define uint16                  uint16_t
+#define uint32                  uint32_t
+#define uint64                  uint64_t
+
+#define int8                    int8_t
+#define int16                   int16_t
+#define int32                   int32_t
+#define int64                   int64_t
+
+typedef float                   float32;
+typedef double                  float64;
+
+typedef volatile uint8          vuint8;
+typedef volatile uint16         vuint16;
+typedef volatile uint32         vuint32;
+typedef volatile uint64         vuint64;
+
+typedef volatile int8           vint8;
+typedef volatile int16          vint16;
+typedef volatile int32          vint32;
+typedef volatile int64          vint64;
+
+typedef volatile float32        vfloat32;
+typedef volatile float64        vfloat64;
+
+typedef uint8                   byte;
+
+typedef int32                   fixed;
+typedef int64                   dfixed;
+
+typedef volatile int32          vfixed;
+
+#define u8                      uint8
+#define u16                     uint16
+#define u32                     uint32
+#define u64                     uint64
+
+#define s8                      int8
+#define s16                     int16
+#define s32                     int32
+#define s64                     int64
+
+typedef volatile u8             vu8;
+typedef volatile u16            vu16;
+typedef volatile u32            vu32;
+typedef volatile u64            vu64;
+
+typedef volatile s8             vs8;
+typedef volatile s16            vs16;
+typedef volatile s32            vs32;
+typedef volatile s64            vs64;
 
 #else
 
