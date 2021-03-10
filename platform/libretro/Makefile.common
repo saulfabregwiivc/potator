@@ -13,8 +13,6 @@ SOURCES_C := \
 	$(CORE_SRC_DIR)/gpu.c \
 	$(CORE_SRC_DIR)/interrupts.c \
 	$(CORE_SRC_DIR)/io.c \
-	$(CORE_SRC_DIR)/log.c \
-	$(CORE_SRC_DIR)/memory.c \
 	$(CORE_SRC_DIR)/memorymap.c \
 	$(CORE_SRC_DIR)/sound.c \
 	$(CORE_SRC_DIR)/timer.c \

@@ -13,9 +13,9 @@
 #ifndef __SUPERVISION_H__
 #define __SUPERVISION_H__
 
-#include "log.h"
+/*#include "log.h"*/
 #include "types.h"
-#include "memory.h"
+/*#include "memory.h"*/
 #include "version.h"
 #include "io.h"
 #include "gpu.h"

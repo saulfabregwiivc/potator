@@ -13,12 +13,12 @@
 #include <stdio.h>
 #include <string.h>
 
-uint8	*memorymap_programRom;
-uint8	*memorymap_lowerRam;
-uint8	*memorymap_upperRam;
-uint8	*memorymap_lowerRomBank;
-uint8	*memorymap_upperRomBank;
-uint8	*memorymap_regs;
+uint8	*memorymap_programRom = NULL;
+uint8	*memorymap_lowerRam = NULL;
+uint8	*memorymap_upperRam = NULL;
+uint8	*memorymap_lowerRomBank = NULL;
+uint8	*memorymap_upperRomBank = NULL;
+uint8	*memorymap_regs = NULL;
 
 static uint32   memorymap_programRomSize;
 
@@ -48,10 +48,14 @@ uint8 *memorymap_getRomPointer(void)
 void memorymap_init()
 {
 	//fprintf(log_get(), "memorymap: init\n");
-	memory_malloc_secure((void**)&memorymap_lowerRam, 0x2000, "Lower ram");
-	memory_malloc_secure((void**)&memorymap_upperRam, 0x2000, "Upper ram");
-	memory_malloc_secure((void**)&memorymap_regs,     0x2000, "Internal registers");
 
+	/*memory_malloc_secure((void**)&memorymap_lowerRam, 0x2000, "Lower ram");
+	memory_malloc_secure((void**)&memorymap_upperRam, 0x2000, "Upper ram");
+	memory_malloc_secure((void**)&memorymap_regs,     0x2000, "Internal registers");*/
+
+	memorymap_lowerRam = (uint8*)malloc(0x2000);
+	memorymap_upperRam = (uint8*)malloc(0x2000);
+	memorymap_regs     = (uint8*)malloc(0x2000);
 }
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -65,14 +69,26 @@ void memorymap_init()
 void memorymap_done()
 {
 	//fprintf(log_get(), "memorymap: done\n");
-	memory_free(memorymap_lowerRam);
+	/*memory_free(memorymap_lowerRam);
 	memory_free(memorymap_upperRam);
-	memory_free(memorymap_regs);
+	memory_free(memorymap_regs);*/
+
+	if (memorymap_lowerRam)
+		free(memorymap_lowerRam);
+
+	if (memorymap_upperRam)
+		free(memorymap_upperRam);
+
+	if (memorymap_regs)
+		free(memorymap_regs);
+
 	if (memorymap_programRom)
-	{
 		free(memorymap_programRom);
-		memorymap_programRom = NULL;
-	}
+
+	memorymap_lowerRam   = NULL;
+	memorymap_upperRam   = NULL;
+	memorymap_regs       = NULL;
+	memorymap_programRom = NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -254,7 +270,8 @@ void memorymap_load(uint8 *rom, uint32 size)
 		uint8 *tmp = (uint8*)malloc(0x10000);
 		memcpy(tmp+0x0000, memorymap_programRom, 0x8000);
 		memcpy(tmp+0x8000, memorymap_programRom, 0x8000);
-		free(memorymap_programRom);
+		if (memorymap_programRom)
+			free(memorymap_programRom);
 		memorymap_programRom = tmp;
 		memorymap_programRomSize = 0x10000;
 	}

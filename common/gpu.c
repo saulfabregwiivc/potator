@@ -29,7 +29,7 @@
 #include "../platform/rs97/shared.h"
 #endif
 
-static uint16	*supervision_palette;
+static uint16	supervision_palette[4];
 uint8          gpu_regs[4];
 #ifdef NDS
 #define RGB555(R,G,B) ((((int)(B))<<10)|(((int)(G))<<5)|(((int)(R)))|BIT(15))
@@ -156,7 +156,6 @@ void gpu_init(void)
 	printf("Gpu Init\n");
 	#endif
 	//fprintf(log_get(), "gpu: init\n");
-	memory_malloc_secure((void**)&supervision_palette,  4*sizeof(int16), "Palette");
 }
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -170,7 +169,6 @@ void gpu_init(void)
 void gpu_done(void)
 {
 	//fprintf(log_get(), "gpu: done\n");
-	memory_free(supervision_palette);
 }
 ////////////////////////////////////////////////////////////////////////////////
 //
