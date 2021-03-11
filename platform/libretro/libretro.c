@@ -44,6 +44,7 @@ static int ghosting_frames         = 0;
 static uint16 *video_buffer        = NULL;
 static uint8 *audio_samples_buffer = NULL;
 static int16_t *audio_out_buffer   = NULL;
+uint8 *rom_data                    = NULL;
 
 struct sv_color_scheme
 {
@@ -256,7 +257,6 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 bool retro_load_game(const struct retro_game_info *info)
 {
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
-   uint8 *rom_data             = NULL;
    bool success                = false;
 
    struct retro_input_descriptor desc[] = {
@@ -286,9 +286,7 @@ bool retro_load_game(const struct retro_game_info *info)
       return false;
    }
 
-   /* Potator requires a *copy* of the ROM data...
-    * > Note: the buffer will be free()'d inside
-    *   supervision_load() */
+   /* Potator requires a *copy* of the ROM data */
    rom_data = (uint8*)malloc(info->size);
 
    if (!rom_data)
@@ -329,6 +327,12 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 void retro_unload_game(void) 
 {
    supervision_done();
+
+   if (rom_data)
+   {
+      free(rom_data);
+      rom_data = NULL;
+   }
 }
 
 unsigned retro_get_region(void)
