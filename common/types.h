@@ -1,6 +1,8 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
+#include <string.h> /* For memcpy() */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -131,6 +133,57 @@ static double SV_SwapDouble(const double x)
     double _; \
      fread(&_, sizeof(_), 1, fp); \
     x = (real)SV_SwapLEDouble(_); } while (0)
+
+/*
+ * Buffer
+ */
+
+#define WRITE_BUF_BOOL(x, buf) do { \
+    uint8 _ = x ? 1 : 0; \
+    memcpy(buf, &_, 1); \
+    buf += 1; } while (0)
+#define  READ_BUF_BOOL(x, buf) do { \
+    uint8 _; \
+    memcpy(&_, buf, 1); \
+    buf += 1; \
+    x = _ ? TRUE : FALSE; } while (0)
+
+#define WRITE_BUF_uint8(x, buf)        do { \
+    memcpy(buf, &x, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+#define  READ_BUF_uint8(x, buf)        do { \
+    memcpy(&x, buf, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+
+#define WRITE_BUF_int8(x, buf)  WRITE_BUF_uint8(x, buf)
+#define  READ_BUF_int8(x, buf)   READ_BUF_uint8(x, buf)
+
+#define WRITE_BUF_uint16(x, buf)       do { \
+    memcpy(buf, &x, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+#define  READ_BUF_uint16(x, buf)       do { \
+    memcpy(&x, buf, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+
+#define WRITE_BUF_int16(x, buf)  WRITE_BUF_uint16(x, buf)
+#define  READ_BUF_int16(x, buf)   READ_BUF_uint16(x, buf)
+
+#define WRITE_BUF_uint32(x, buf)       do { \
+    memcpy(buf, &x, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+#define  READ_BUF_uint32(x, buf)       do { \
+    memcpy(&x, buf, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+
+#define WRITE_BUF_int32(x, buf)  WRITE_BUF_uint32(x, buf)
+#define  READ_BUF_int32(x, buf)   READ_BUF_uint32(x, buf)
+
+#define WRITE_BUF_real(x, buf)         do { \
+    memcpy(buf, &x, sizeof(x)); \
+    buf += sizeof(x); } while (0)
+#define  READ_BUF_real(x, buf)         do { \
+    memcpy(&x, buf, sizeof(x)); \
+    buf += sizeof(x); } while (0)
 
 #ifdef __cplusplus
 }

@@ -115,6 +115,10 @@ BOOL supervision_save_state(const char *statePath, int8 id);
  */
 BOOL supervision_load_state(const char *statePath, int8 id);
 
+uint32 supervision_save_state_buf_size(void);
+BOOL supervision_save_state_buf(uint8 *data, uint32 size);
+BOOL supervision_load_state_buf(const uint8 *data, uint32 size);
+
 #ifdef __cplusplus
 }
 #endif

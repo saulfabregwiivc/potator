@@ -297,6 +297,56 @@ void memorymap_load_state(FILE *fp)
     READ_BOOL(timer_shot,   fp);
 }
 
+uint32 memorymap_save_state_buf_size(void)
+{
+    return 0x2000 +
+           0x2000 +
+           0x2000 +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8);
+}
+
+void memorymap_save_state_buf(uint8 *data)
+{
+    uint8 ibank = 0;
+
+    memcpy(data, regs, 0x2000);
+    data += 0x2000;
+
+    memcpy(data, lowerRam, 0x2000);
+    data += 0x2000;
+
+    memcpy(data, upperRam, 0x2000);
+    data += 0x2000;
+
+    ibank = (uint8)((lowerRomBank - programRom) / 0x4000);
+    WRITE_BUF_uint8(ibank, data);
+
+    WRITE_BUF_BOOL(dma_finished, data);
+    WRITE_BUF_BOOL(timer_shot,   data);
+}
+
+void memorymap_load_state_buf(const uint8 *data)
+{
+    uint8 ibank = 0;
+
+    memcpy(regs, data, 0x2000);
+    data += 0x2000;
+
+    memcpy(lowerRam, data, 0x2000);
+    data += 0x2000;
+
+    memcpy(upperRam, data, 0x2000);
+    data += 0x2000;
+
+    READ_BUF_uint8(ibank, data);
+    lowerRomBank = programRom + ibank * 0x4000;
+
+    READ_BUF_BOOL(dma_finished, data);
+    READ_BUF_BOOL(timer_shot,   data);
+}
+
 uint8 *memorymap_getLowerRamPointer(void)
 {
     return lowerRam;

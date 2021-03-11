@@ -341,3 +341,96 @@ void sound_load_state(FILE *fp)
     EXPAND_DMA
 #undef X
 }
+
+uint32 sound_save_state_buf_size(void)
+{
+    uint32 size = 0;
+    int i;
+
+    for (i = 0; i < 2; i++) {
+        size += sizeof(m_channel[i].reg);
+        size += sizeof(uint8);
+        size += sizeof(uint8);
+        size += sizeof(uint8);
+        size += sizeof(uint16);
+        size += sizeof(uint16);
+        size += sizeof(uint16);
+    }
+
+    size += sizeof(m_noise.reg);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint16);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint16);
+    size += sizeof(real);
+    size += sizeof(real);
+
+    size += sizeof(m_dma.reg);
+
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint8);
+    size += sizeof(uint32);
+    size += sizeof(uint16);
+    size += sizeof(uint16);
+    size += sizeof(real);
+    size += sizeof(real);
+
+    return size;
+}
+
+void sound_save_state_buf(uint8 *data)
+{
+    int i;
+    for (i = 0; i < 2; i++) {
+        memcpy(data, m_channel[i].reg, sizeof(m_channel[i].reg));
+        data += sizeof(m_channel[i].reg);
+#define X(type, member) WRITE_BUF_##type(m_channel[i].member, data);
+        EXPAND_CHANNEL
+#undef X
+    }
+
+    memcpy(data, m_noise.reg, sizeof(m_noise.reg));
+    data += sizeof(m_noise.reg);
+#define X(type, member) WRITE_BUF_##type(m_noise.member, data);
+    EXPAND_NOISE
+#undef X
+
+    memcpy(data, m_dma.reg, sizeof(m_dma.reg));
+    data += sizeof(m_dma.reg);
+#define X(type, member) WRITE_BUF_##type(m_dma.member, data);
+    EXPAND_DMA
+#undef X
+}
+
+void sound_load_state_buf(const uint8 *data)
+{
+    int i;
+
+    sound_reset();
+
+    for (i = 0; i < 2; i++) {
+        memcpy(m_channel[i].reg, data, sizeof(m_channel[i].reg));
+        data += sizeof(m_channel[i].reg);
+#define X(type, member) READ_BUF_##type(m_channel[i].member, data);
+        EXPAND_CHANNEL
+#undef X
+    }
+
+    memcpy(m_noise.reg, data, sizeof(m_noise.reg));
+    data += sizeof(m_noise.reg);
+#define X(type, member) READ_BUF_##type(m_noise.member, data);
+    EXPAND_NOISE
+#undef X
+
+    memcpy(m_dma.reg, data, sizeof(m_dma.reg));
+    data += sizeof(m_dma.reg);
+#define X(type, member) READ_BUF_##type(m_dma.member, data);
+    EXPAND_DMA
+#undef X
+}

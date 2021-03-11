@@ -19,4 +19,8 @@ void sound_noise_write(int offset, uint8 data);
 void sound_save_state(FILE *fp);
 void sound_load_state(FILE *fp);
 
+uint32 sound_save_state_buf_size(void);
+void sound_save_state_buf(uint8 *data);
+void sound_load_state_buf(const uint8 *data);
+
 #endif

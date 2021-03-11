@@ -26,6 +26,10 @@ BOOL memorymap_load(const uint8 *rom, uint32 size);
 void memorymap_save_state(FILE *fp);
 void memorymap_load_state(FILE *fp);
 
+uint32 memorymap_save_state_buf_size(void);
+void memorymap_save_state_buf(uint8 *data);
+void memorymap_load_state_buf(const uint8 *data);
+
 uint8 *memorymap_getLowerRamPointer(void);
 uint8 *memorymap_getUpperRamPointer(void);
 uint8 *memorymap_getRegisters(void);

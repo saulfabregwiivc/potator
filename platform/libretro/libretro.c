@@ -230,20 +230,17 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
 
 size_t retro_serialize_size(void) 
 {
-   //return (size_t)sv_saveStateBufSize();
-   return 0;
+   return (size_t)supervision_save_state_buf_size();
 }
 
 bool retro_serialize(void *data, size_t size)
 { 
-   //return sv_saveStateBuf(data, (uint32)size);
-   return false;
+   return supervision_save_state_buf((uint8*)data, (uint32)size);
 }
 
 bool retro_unserialize(const void *data, size_t size)
 {
-   //return sv_loadStateBuf(data, (uint32)size);
-   return false;
+   return supervision_load_state_buf((uint8*)data, (uint32)size);
 }
 
 void retro_cheat_reset(void)
@@ -371,6 +368,7 @@ void retro_init(void)
 #else
    video_buffer = (uint16*)malloc(SV_W * SV_H * sizeof(uint16));
 #endif
+   memset(video_buffer, 0, SV_W * SV_H * sizeof(uint16));
 
    /* Round up sample buffer size to nearest multiple
     * of 128, to avoid potential overflows */

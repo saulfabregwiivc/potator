@@ -215,3 +215,70 @@ BOOL supervision_load_state(const char *statePath, int8 id)
     }
     return TRUE;
 }
+
+uint32 supervision_save_state_buf_size(void)
+{
+    return memorymap_save_state_buf_size() +
+           sound_save_state_buf_size() +
+           timer_save_state_buf_size() +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(int32) +
+           sizeof(int32) +
+           sizeof(uint8) +
+           sizeof(uint8) +
+           sizeof(int32) +
+           sizeof(uint8) +
+           128; /* Add some padding, just in case... */
+}
+
+BOOL supervision_save_state_buf(uint8 *data, uint32 size)
+{
+    if (!data || size < supervision_save_state_buf_size()) {
+        return FALSE;
+    }
+
+    memorymap_save_state_buf(data);
+    data += memorymap_save_state_buf_size();
+
+    sound_save_state_buf(data);
+    data += sound_save_state_buf_size();
+
+    timer_save_state_buf(data);
+    data += timer_save_state_buf_size();
+
+#define X(type, member) WRITE_BUF_##type(m6502_registers.member, data);
+    EXPAND_M6502
+#undef X
+    WRITE_BUF_BOOL(irq, data);
+
+    return TRUE;
+}
+
+BOOL supervision_load_state_buf(const uint8 *data, uint32 size)
+{
+    if (!data || size < supervision_save_state_buf_size()) {
+        return FALSE;
+    }
+
+    memorymap_load_state_buf(data);
+    data += memorymap_save_state_buf_size();
+
+    sound_load_state_buf(data);
+    data += sound_save_state_buf_size();
+
+    timer_load_state_buf(data);
+    data += timer_save_state_buf_size();
+
+#define X(type, member) READ_BUF_##type(m6502_registers.member, data);
+    EXPAND_M6502
+#undef X
+    READ_BUF_BOOL(irq, data);
+
+    return TRUE;
+}

@@ -46,3 +46,21 @@ void timer_load_state(FILE *fp)
     READ_int32(timer_cycles, fp);
     READ_BOOL(timer_activated, fp);
 }
+
+uint32 timer_save_state_buf_size(void)
+{
+    return sizeof(int32) +
+           sizeof(uint8);
+}
+
+void timer_save_state_buf(uint8 *data)
+{
+    WRITE_BUF_int32(timer_cycles, data);
+    WRITE_BUF_BOOL(timer_activated, data);
+}
+
+void timer_load_state_buf(const uint8 *data)
+{
+    READ_BUF_int32(timer_cycles, data);
+    READ_BUF_BOOL(timer_activated, data);
+}
