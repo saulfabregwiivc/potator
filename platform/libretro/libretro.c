@@ -45,6 +45,7 @@ static uint16 *video_buffer        = NULL;
 static uint8 *audio_samples_buffer = NULL;
 static int16_t *audio_out_buffer   = NULL;
 uint8 *rom_data                    = NULL;
+size_t rom_size                    = 0;
 
 struct sv_color_scheme
 {
@@ -183,6 +184,27 @@ static void update_audio(void)
    audio_batch_cb(audio_out_buffer, AUDIO_BUFFER_SIZE >> 1);
 }
 
+static void init_retro_memory_map(void)
+{
+   bool cheevos_supported                  = true;
+   const uint64_t ram_flags                = RETRO_MEMDESC_SYSTEM_RAM;
+   const uint64_t rom_flags                = RETRO_MEMDESC_CONST;
+   struct retro_memory_map mmaps           = {0};
+   struct retro_memory_descriptor descs[4] =
+   {
+      { ram_flags, memorymap_getLowerRamPointer(), 0, 0x0000, 0, 0, 0x2000,   "RAMLO"  },
+      { ram_flags, memorymap_getRegisters(),       0, 0x2000, 0, 0, 0x2000,   "RAMREG" },
+      { ram_flags, memorymap_getUpperRamPointer(), 0, 0x4000, 0, 0, 0x2000,   "RAMHI"  },
+      { rom_flags, rom_data,                       0, 0x8000, 0, 0, 0x8000,   "ROM"    },
+   };
+
+   mmaps.descriptors     = descs;
+   mmaps.num_descriptors = sizeof(descs) / sizeof(*descs);
+
+   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &mmaps);
+   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &cheevos_supported);
+}
+
 /************************************
  * libretro implementation
  ************************************/
@@ -287,7 +309,8 @@ bool retro_load_game(const struct retro_game_info *info)
    }
 
    /* Potator requires a *copy* of the ROM data */
-   rom_data = (uint8*)malloc(info->size);
+   rom_size = info->size;
+   rom_data = (uint8*)malloc(rom_size);
 
    if (!rom_data)
    {
@@ -296,13 +319,13 @@ bool retro_load_game(const struct retro_game_info *info)
       return false;
    }
 
-   memcpy(rom_data, (const uint8*)info->data, info->size);
+   memcpy(rom_data, (const uint8*)info->data, rom_size);
 
    /* Initialise emulator */
    supervision_init();
 
    /* Load ROM */
-   success = supervision_load(rom_data, info->size);
+   success = supervision_load(rom_data, rom_size);
 
    if (success)
    {
@@ -311,6 +334,9 @@ bool retro_load_game(const struct retro_game_info *info)
 
       /* Apply initial core options */
       check_variables(true);
+
+      /* Initialise frontend memory map */
+      init_retro_memory_map();
    }
 
    return success;
@@ -333,6 +359,8 @@ void retro_unload_game(void)
       free(rom_data);
       rom_data = NULL;
    }
+
+   rom_size = 0;
 }
 
 unsigned retro_get_region(void)
