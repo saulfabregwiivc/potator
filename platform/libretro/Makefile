@@ -355,6 +355,14 @@ else ifneq (,$(findstring hardfloat,$(platform)))
 	ASFLAGS += -mfloat-abi=hard
 endif
 	CFLAGS += -DARM
+	
+else ifneq (,$(findstring aarch64,$(platform)))
+	TARGET := $(TARGET_NAME)_libretro.so
+	SHARED := -shared -Wl,--no-undefined -Wl,--version-script=link.T
+	fpic := -fPIC
+	CFLAGS += -D_GNU_SOURCE=1
+	FLAGS += -DARM
+	FLAGS += -fomit-frame-pointer -ffast-math
 
 # Windows MSVC 2003 Xbox 1
 else ifeq ($(platform), xbox1_msvc2003)
