@@ -44,8 +44,9 @@ static int ghosting_frames         = 0;
 static uint16 *video_buffer        = NULL;
 static uint8 *audio_samples_buffer = NULL;
 static int16_t *audio_out_buffer   = NULL;
-uint8 *rom_data                    = NULL;
-size_t rom_size                    = 0;
+static uint8 *rom_buf              = NULL;
+static const uint8 *rom_data       = NULL;
+static size_t rom_size             = 0;
 
 struct sv_color_scheme
 {
@@ -195,7 +196,10 @@ static void init_retro_memory_map(void)
       { ram_flags, memorymap_getLowerRamPointer(), 0, 0x0000, 0, 0, 0x2000,   "RAMLO"  },
       { ram_flags, memorymap_getRegisters(),       0, 0x2000, 0, 0, 0x2000,   "RAMREG" },
       { ram_flags, memorymap_getUpperRamPointer(), 0, 0x4000, 0, 0, 0x2000,   "RAMHI"  },
-      { rom_flags, rom_data,                       0, 0x8000, 0, 0, 0x8000,   "ROM"    },
+      /* It is safe to cast rom_data, since RETRO_MEMDESC_CONST
+       * guarantees that the frontend will never change this
+       * memory area */
+      { rom_flags, (void*)rom_data,                0, 0x8000, 0, 0, 0x8000,   "ROM"    },
    };
 
    mmaps.descriptors     = descs;
@@ -217,8 +221,21 @@ void retro_set_input_state(retro_input_state_t cb) { input_state_cb = cb; }
 
 void retro_set_environment(retro_environment_t cb)
 {
+   static const struct retro_system_content_info_override content_overrides[] = {
+      {
+         "bin|sv", /* extensions */
+         false,    /* need_fullpath */
+         true      /* persistent_data */
+      },
+      { NULL, false, false }
+   };
+
    environ_cb = cb;
    libretro_set_core_options(environ_cb);
+
+   /* Request a persistent content data buffer */
+   environ_cb(RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE,
+         (void*)content_overrides);
 }
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -278,8 +295,9 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 
 bool retro_load_game(const struct retro_game_info *info)
 {
-   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
-   bool success                = false;
+   const struct retro_game_info_ext *info_ext = NULL;
+   enum retro_pixel_format fmt                = RETRO_PIXEL_FORMAT_RGB565;
+   bool success                               = false;
 
    struct retro_input_descriptor desc[] = {
       { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,   "Left" },
@@ -294,8 +312,38 @@ bool retro_load_game(const struct retro_game_info *info)
       { 0 },
    };
 
-   if (!info)
-      return false;
+   /* Potator requires a persistent ROM data buffer */
+   rom_buf  = NULL;
+   rom_data = NULL;
+   rom_size = 0;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &info_ext) &&
+       info_ext->persistent_data)
+   {
+      rom_data = (const uint8*)info_ext->data;
+      rom_size = info_ext->size;
+   }
+
+   /* If frontend does not support persistent
+    * content data, must create a copy */
+   if (!rom_data)
+   {
+      if (!info)
+         return false;
+
+      rom_size = info->size;
+      rom_buf  = (uint8*)malloc(rom_size);
+
+      if (!rom_buf)
+      {
+         if (log_cb)
+            log_cb(RETRO_LOG_INFO, "[Potator]: Failed to allocate ROM buffer!\n");
+         return false;
+      }
+
+      memcpy(rom_buf, (const uint8*)info->data, rom_size);
+      rom_data = (const uint8*)rom_buf;
+   }
 
    /* Set input descriptors */
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
@@ -307,19 +355,6 @@ bool retro_load_game(const struct retro_game_info *info)
          log_cb(RETRO_LOG_INFO, "[Potator]: RGB565 is not supported.\n");
       return false;
    }
-
-   /* Potator requires a *copy* of the ROM data */
-   rom_size = info->size;
-   rom_data = (uint8*)malloc(rom_size);
-
-   if (!rom_data)
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_INFO, "[Potator]: Failed to allocate ROM buffer!\n");
-      return false;
-   }
-
-   memcpy(rom_data, (const uint8*)info->data, rom_size);
 
    /* Initialise emulator */
    supervision_init();
@@ -354,13 +389,12 @@ void retro_unload_game(void)
 {
    supervision_done();
 
-   if (rom_data)
-   {
-      free(rom_data);
-      rom_data = NULL;
-   }
+   if (rom_buf)
+      free(rom_buf);
 
-   rom_size = 0;
+   rom_buf               = NULL;
+   rom_data              = NULL;
+   rom_size              = 0;
 }
 
 unsigned retro_get_region(void)
