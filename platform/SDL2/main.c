@@ -368,7 +368,7 @@ void Loop(void)
         switch (GetMenuState()) {
         case MENUSTATE_EMULATION:
             HandleInput();
-            supervision_exec(screenBuffer);
+            supervision_exec(screenBuffer, FALSE);
             break;
         case MENUSTATE_DROP_ROM:
             DrawDropROM();

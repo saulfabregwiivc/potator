@@ -275,7 +275,7 @@ Increase Window Size: =\n\
     while (!done) {
         PollEvents();
         HandleInput();
-        supervision_exec(screenBuffer);
+        supervision_exec(screenBuffer, FALSE);
         Draw();
         Wait();
     }

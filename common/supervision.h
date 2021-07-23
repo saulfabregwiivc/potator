@@ -77,8 +77,8 @@ void supervision_done(void);
  * \return TRUE - success, FALSE - error
  */
 BOOL supervision_load(const uint8 *rom, uint32 romSize);
-void supervision_exec(uint16 *backbuffer);
-void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth);
+void supervision_exec(uint16 *backbuffer, BOOL skipFrame);
+void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth, BOOL skipFrame);
 
 /*!
  * \param data Bits 0-7: Right, Left, Down, Up, B, A, Select, Start.

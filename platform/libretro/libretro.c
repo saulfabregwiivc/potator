@@ -35,9 +35,10 @@ static retro_audio_sample_batch_t audio_batch_cb;
 
 static bool libretro_supports_bitmasks = false;
 
-#define SV_W 160
-#define SV_H 160
-#define AUDIO_BUFFER_SIZE ((SV_SAMPLE_RATE / 60) << 1)
+#define SV_FPS 60
+#define SV_W   160
+#define SV_H   160
+#define AUDIO_BUFFER_SIZE ((SV_SAMPLE_RATE / SV_FPS) << 1)
 
 static enum SV_COLOR color_scheme  = SV_COLOR_SCHEME_DEFAULT;
 static int ghosting_frames         = 0;
@@ -88,6 +89,73 @@ struct sv_color_scheme sv_color_schemes[] = {
 };
 
 /************************************
+ * Frameskipping Support
+ ************************************/
+
+static unsigned frameskip_type             = 0;
+static unsigned frameskip_threshold        = 0;
+static uint16_t frameskip_counter          = 0;
+
+static bool retro_audio_buff_active        = false;
+static unsigned retro_audio_buff_occupancy = 0;
+static bool retro_audio_buff_underrun      = false;
+/* Maximum number of consecutive frames that
+ * can be skipped */
+#define FRAMESKIP_MAX 60
+
+static unsigned audio_latency              = 0;
+static bool update_audio_latency           = false;
+
+static void retro_audio_buff_status_cb(
+      bool active, unsigned occupancy, bool underrun_likely)
+{
+   retro_audio_buff_active    = active;
+   retro_audio_buff_occupancy = occupancy;
+   retro_audio_buff_underrun  = underrun_likely;
+}
+
+static void init_frameskip(void)
+{
+   if (frameskip_type > 0)
+   {
+      struct retro_audio_buffer_status_callback buf_status_cb;
+
+      buf_status_cb.callback = retro_audio_buff_status_cb;
+      if (!environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK,
+            &buf_status_cb))
+      {
+         if (log_cb)
+            log_cb(RETRO_LOG_WARN, "Frameskip disabled - frontend does not support audio buffer status monitoring.\n");
+
+         retro_audio_buff_active    = false;
+         retro_audio_buff_occupancy = 0;
+         retro_audio_buff_underrun  = false;
+         audio_latency              = 0;
+      }
+      else
+      {
+         /* Frameskip is enabled - increase frontend
+          * audio latency to minimise potential
+          * buffer underruns */
+         float frame_time_msec = 1000.0f / (float)SV_FPS;
+
+         /* Set latency to 6x current frame time... */
+         audio_latency = (unsigned)((6.0f * frame_time_msec) + 0.5f);
+
+         /* ...then round up to nearest multiple of 32 */
+         audio_latency = (audio_latency + 0x1F) & ~0x1F;
+      }
+   }
+   else
+   {
+      environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, NULL);
+      audio_latency = 0;
+   }
+
+   update_audio_latency = true;
+}
+
+/************************************
  * Auxiliary functions
  ************************************/
 
@@ -118,6 +186,7 @@ static void check_variables(bool startup)
    struct retro_variable var = {0};
    enum SV_COLOR color_scheme_last;
    int ghosting_frames_last;
+   unsigned frameskip_type_last;
 
    /* Internal Palette */
    color_scheme_last = color_scheme;
@@ -142,6 +211,31 @@ static void check_variables(bool startup)
 
    if (startup || (ghosting_frames != ghosting_frames_last))
       supervision_set_ghosting(ghosting_frames);
+
+   /* Frameskip */
+   frameskip_type_last = frameskip_type;
+   frameskip_type      = 0;
+   var.key             = "potator_frameskip";
+   var.value           = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (!strcmp(var.value, "auto"))
+         frameskip_type = 1;
+      else if (!strcmp(var.value, "manual"))
+         frameskip_type = 2;
+   }
+
+   if (startup || (frameskip_type != frameskip_type_last))
+      init_frameskip();
+
+   /* Frameskip Threshold (%) */
+   frameskip_threshold = 33;
+   var.key             = "potator_frameskip_threshold";
+   var.value           = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      frameskip_threshold = strtol(var.value, NULL, 10);
 }
 
 static void update_input(void)
@@ -253,8 +347,8 @@ void retro_get_system_info(struct retro_system_info *info)
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
    memset(info, 0, sizeof(*info));
-   info->timing.fps            = 60;
-   info->timing.sample_rate    = SV_SAMPLE_RATE;
+   info->timing.fps            = (double)SV_FPS;
+   info->timing.sample_rate    = (double)SV_SAMPLE_RATE;
    info->geometry.base_width   = SV_W;
    info->geometry.base_height  = SV_H;
    info->geometry.max_width    = SV_W;
@@ -440,6 +534,15 @@ void retro_init(void)
     * of 128, to avoid potential overflows */
    audio_samples_buffer = (uint8*)malloc(((AUDIO_BUFFER_SIZE + 0x7F) & ~0x7F) * sizeof(uint8));
    audio_out_buffer     = (int16_t*)malloc(AUDIO_BUFFER_SIZE * sizeof(int16_t));
+
+   frameskip_type             = 0;
+   frameskip_threshold        = 0;
+   frameskip_counter          = 0;
+   retro_audio_buff_active    = false;
+   retro_audio_buff_occupancy = 0;
+   retro_audio_buff_underrun  = false;
+   audio_latency              = 0;
+   update_audio_latency       = false;
 }
 
 void retro_deinit(void)
@@ -479,7 +582,8 @@ void retro_reset(void)
 
 void retro_run(void)
 {
-   bool options_updated  = false;
+   bool options_updated = false;
+   BOOL skip_frame      = FALSE;
 
    /* Core options */
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
@@ -488,11 +592,46 @@ void retro_run(void)
    /* Update input */
    update_input();
 
+   /* Check whether current frame should be skipped */
+   if ((frameskip_type > 0) && retro_audio_buff_active)
+   {
+      switch (frameskip_type)
+      {
+         case 1: /* auto */
+            skip_frame = retro_audio_buff_underrun ? TRUE : FALSE;
+            break;
+         case 2: /* manual */
+            skip_frame = (retro_audio_buff_occupancy < frameskip_threshold) ? TRUE : FALSE;
+            break;
+         default:
+            skip_frame = 0;
+            break;
+      }
+
+      if (!skip_frame || (frameskip_counter >= FRAMESKIP_MAX))
+      {
+         skip_frame        = 0;
+         frameskip_counter = 0;
+      }
+      else
+         frameskip_counter++;
+   }
+
+   /* If frameskip settings have changed, update
+    * frontend audio latency */
+   if (update_audio_latency)
+   {
+      environ_cb(RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY,
+            &audio_latency);
+      update_audio_latency = false;
+   }
+
    /* Run emulator */
-   supervision_exec(video_buffer);
+   supervision_exec(video_buffer, skip_frame);
 
    /* Output video */
-   video_cb(video_buffer, SV_W, SV_H, SV_W << 1);
+   video_cb((bool)skip_frame ? NULL : video_buffer,
+         SV_W, SV_H, SV_W << 1);
 
    /* Output audio */
    update_audio();
