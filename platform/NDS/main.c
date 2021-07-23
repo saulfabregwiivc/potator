@@ -135,7 +135,7 @@ int main()
     while (true) {
         CheckKeys();
 
-        supervision_exec(screenBuffer);
+        supervision_exec(screenBuffer, FALSE);
 
         for (int j = 0; j < 160; j++) {
             // Copy frame buffer to screen

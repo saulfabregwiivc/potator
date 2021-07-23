@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
             memset(&oldPad, 0xFF, sizeof(SceCtrlData)); // Reset buttons
         }
 
-        supervision_exec_ex((uint16_t*)pixels, TEX_WIDTH);
+        supervision_exec_ex((uint16_t*)pixels, TEX_WIDTH, FALSE);
 
         sceKernelDcacheWritebackAll();
 

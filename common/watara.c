@@ -70,12 +70,12 @@ BOOL supervision_load(const uint8 *rom, uint32 romSize)
     return TRUE;
 }
 
-void supervision_exec(uint16 *backbuffer)
+void supervision_exec(uint16 *backbuffer, BOOL skipFrame)
 {
-    supervision_exec_ex(backbuffer, SV_W);
+    supervision_exec_ex(backbuffer, SV_W, skipFrame);
 }
 
-void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth)
+void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth, BOOL skipFrame)
 {
     uint32 i, scan;
     uint8 *regs = memorymap_getRegisters();
@@ -87,19 +87,21 @@ void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth)
         timer_exec(m6502_registers.IPeriod);
     }
 
-    //if (!(regs[BANK] & 0x8)) { printf("LCD off\n"); }
-    scan   = regs[XPOS] / 4 + regs[YPOS] * 0x30;
-    innerx = regs[XPOS] & 3;
-    size   = regs[XSIZE]; // regs[XSIZE] <= SV_W
-    if (size > SV_W)
-        size = SV_W; // 192: Chimera, Matta Blatta, Tennis Pro '92
+    if (!skipFrame) {
+        //if (!(regs[BANK] & 0x8)) { printf("LCD off\n"); }
+        scan   = regs[XPOS] / 4 + regs[YPOS] * 0x30;
+        innerx = regs[XPOS] & 3;
+        size   = regs[XSIZE]; // regs[XSIZE] <= SV_W
+        if (size > SV_W)
+            size = SV_W; // 192: Chimera, Matta Blatta, Tennis Pro '92
 
-    for (i = 0; i < SV_H; i++) {
-        if (scan >= 0x1fe0)
-            scan -= 0x1fe0; // SSSnake
-        gpu_render_scanline(scan, backbuffer, innerx, size);
-        backbuffer += backbufferWidth;
-        scan += 0x30;
+        for (i = 0; i < SV_H; i++) {
+            if (scan >= 0x1fe0)
+                scan -= 0x1fe0; // SSSnake
+            gpu_render_scanline(scan, backbuffer, innerx, size);
+            backbuffer += backbufferWidth;
+            scan += 0x30;
+        }
     }
 
     if (Rd6502(0x2026) & 0x01)

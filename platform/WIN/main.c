@@ -140,7 +140,7 @@ DWORD WINAPI run(LPVOID lpParameter)
             supervision_set_input(controls_state);
 
             while (NeedUpdate()) {
-                supervision_exec(screenBuffer);
+                supervision_exec(screenBuffer, FALSE);
 
 #ifdef TERRIBLE_AUDIO_IMPLEMENTATION
                 supervision_update_sound(audioBuffer, BUFFER_SIZE / 2);
