@@ -18,11 +18,6 @@
 extern "C" {
 #endif
 
-/* Compilation options:       */
-/* #define FAST_RDOP */        /* Separate Op6502()/Rd6502() */
-/* #define DEBUG2 */           /* Compile debugging version  */
-#define LSB_FIRST              /* Compile for low-endian CPU */
-
                                /* Loop6502() returns:        */
 #define INT_NONE  0            /* No interrupt required      */
 #define INT_IRQ   1            /* Standard IRQ interrupt     */
@@ -53,15 +48,13 @@ extern "C" {
 typedef signed char offset;
 
 /** Structured Datatypes *************************************/
-/** NOTICE: #define LSB_FIRST for machines where least      **/
-/**         signifcant byte goes first.                     **/
 /*************************************************************/
 typedef union
 {
-#ifdef LSB_FIRST
-    struct { byte l, h; } B;
-#else
+#ifdef MSB_FIRST
     struct { byte h, l; } B;
+#else
+    struct { byte l, h; } B;
 #endif
     word W;
 } pair;

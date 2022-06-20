@@ -22,18 +22,7 @@
 #include "m6502.h"
 #include "tables.h"
 
-/** INLINE ***************************************************/
-/** Different compilers inline C functions differently.     **/
-/*************************************************************/
-/* #define INLINE inline */
-
-/** FAST_RDOP ************************************************/
-/** With this #define not present, Rd6502() should perform  **/
-/** the functions of Rd6502().                              **/
-/*************************************************************/
-#ifndef FAST_RDOP
 #define Op6502(A) Rd6502(A)
-#endif
 
 /* "Izp" added by uso. */
 
