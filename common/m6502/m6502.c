@@ -21,22 +21,11 @@
 
 #include "m6502.h"
 #include "tables.h"
-#include <stdio.h>
 
 /** INLINE ***************************************************/
 /** Different compilers inline C functions differently.     **/
 /*************************************************************/
 /* #define INLINE inline */
-
-/** System-Dependent Stuff ***********************************/
-/** This is system-dependent code put here to speed things  **/
-/** up. It has to stay inlined to be fast.                  **/
-/*************************************************************/
-#ifdef INES
-#define FAST_RDOP
-    extern byte *Page[];
-    INLINE byte Op6502(register word A) { return(Page[A >> 13][A & 0x1FFF]); }
-#endif
 
 /** FAST_RDOP ************************************************/
 /** With this #define not present, Rd6502() should perform  **/
@@ -512,10 +501,6 @@ word Run6502(M6502 *R)
         case 0xFD: MR_Ax(I); M_SBC(I);       break; /* SBC $ssss,x ABS,x */
         case 0xFE: MM_Ax(M_INC);             break; /* INC $ssss,x ABS,x */
         default:
-#ifdef DEBUG
-            printf("[M65C02] Unrecognized instruction: $%02X at PC=$%04X\n",
-                Op6502(R->PC.W - 1), (word)(R->PC.W - 1));
-#endif
             break;
         }
 

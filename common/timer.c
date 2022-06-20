@@ -14,12 +14,10 @@ void timer_reset(void)
 void timer_write(uint8 data)
 {
     uint32 d = data ? data : 0x100; // Dancing Block. d = data; ???
-    if ((memorymap_getRegisters()[BANK] >> 4) & 1) {
+    if ((memorymap_getRegisters()[BANK] >> 4) & 1)
         timer_cycles = d * 0x4000; // Bubble World, Eagle Plan...
-    }
-    else {
+    else
         timer_cycles = d * 0x100;
-    }
     timer_activated = TRUE;
 }
 
@@ -33,18 +31,6 @@ void timer_exec(uint32 cycles)
             memorymap_set_timer_shot();
         }
     }
-}
-
-void timer_save_state(FILE *fp)
-{
-    WRITE_int32(timer_cycles, fp);
-    WRITE_BOOL(timer_activated, fp);
-}
-
-void timer_load_state(FILE *fp)
-{
-    READ_int32(timer_cycles, fp);
-    READ_BOOL(timer_activated, fp);
 }
 
 uint32 timer_save_state_buf_size(void)

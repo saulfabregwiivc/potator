@@ -81,23 +81,19 @@ void sound_stream_update(uint8 *stream, uint32 len)
                             break;
                     }
                     s = on ? ch[j].volume : 0;
-                    if (j == 0) {
+                    if (j == 0)
                         *right += s;
-                    }
-                    else {
+                    else
                         *left += s;
-                    }
                 }
                 ch[j].pos++;
                 if (ch[j].pos >= ch[j].size) {
                     ch[j].pos = 0;
-#ifndef SV_DISABLE_SUPER_DUPER_WAVE
                     // Transition from off to on
                     if (channel->on) {
                         memcpy(&ch[j], channel, sizeof(ch[j]));
                         channel->on = FALSE;
                     }
-#endif
                 }
             }
         }
@@ -169,38 +165,28 @@ void sound_wave_write(int which, int offset, uint8 data)
             // if size == 0 then channel->size == 0
             channel->size = (uint16)((real)SV_SAMPLE_RATE * ((size + 1) << 5) / UNSCALED_CLOCK);
             channel->pos = 0;
-#ifndef SV_DISABLE_SUPER_DUPER_WAVE
             // Popo Team
             if (channel->count != 0 || ch[which].size == 0 || channel->size == 0) {
                 ch[which].size = channel->size;
                 if (channel->count == 0)
                     ch[which].pos = 0;
             }
-#else
-            memcpy(&ch[which], channel, sizeof(ch[which]));
-#endif
         }
             break;
         case 2:
             channel->on       =  data & 0x40;
             channel->waveform = (data & 0x30) >> 4;
             channel->volume   =  data & 0x0f;
-#ifndef SV_DISABLE_SUPER_DUPER_WAVE
             if (!channel->on || ch[which].size == 0 || channel->size == 0) {
                 uint16 pos = ch[which].pos;
                 memcpy(&ch[which], channel, sizeof(ch[which]));
                 if (channel->count != 0) // Journey to the West
                     ch[which].pos = pos;
             }
-#else
-            memcpy(&ch[which], channel, sizeof(ch[which]));
-#endif
             break;
         case 3:
             channel->count = data + 1;
-#ifndef SV_DISABLE_SUPER_DUPER_WAVE
             ch[which].size = channel->size; // Sonny Xpress!
-#endif
             break;
     }
 }
@@ -239,15 +225,8 @@ void sound_noise_write(int offset, uint8 data)
     m_noise.reg[offset] = data;
     switch (offset) {
         case 0: {
-            // Wataroo >= v0.7.1.0
             uint32 divisor = 8 << (data >> 4);
-            // EQU_Watara.asm from Wataroo
-            //uint32 divisor = 16 << (data >> 4);
-            //if ((data >> 4) == 0) divisor = 8; // 500KHz are too many anyway
-            //else if ((data >> 4) > 0xd) divisor >>= 2;
             m_noise.step = UNSCALED_CLOCK / ((real)SV_SAMPLE_RATE * divisor);
-            // MESS/MAME. Wrong
-            //m_noise.step = UNSCALED_CLOCK / (256.0 * SV_SAMPLE_RATE * (1 + (data >> 4)));
             m_noise.volume = data & 0xf;
         }
             break;
@@ -298,49 +277,6 @@ void sound_noise_write(int offset, uint8 data)
     X(uint16, size) \
     X(real, pos) \
     X(real, step)
-
-void sound_save_state(FILE *fp)
-{
-    int i;
-    for (i = 0; i < 2; i++) {
-        fwrite(m_channel[i].reg, sizeof(m_channel[i].reg), 1, fp);
-#define X(type, member) WRITE_##type(m_channel[i].member, fp);
-        EXPAND_CHANNEL
-#undef X
-    }
-
-    fwrite(m_noise.reg, sizeof(m_noise.reg), 1, fp);
-#define X(type, member) WRITE_##type(m_noise.member, fp);
-    EXPAND_NOISE
-#undef X
-    fwrite(m_dma.reg, sizeof(m_dma.reg), 1, fp);
-#define X(type, member) WRITE_##type(m_dma.member, fp);
-    EXPAND_DMA
-#undef X
-}
-
-void sound_load_state(FILE *fp)
-{
-    int i;
-
-    sound_reset();
-
-    for (i = 0; i < 2; i++) {
-        fread(m_channel[i].reg, sizeof(m_channel[i].reg), 1, fp);
-#define X(type, member) READ_##type(m_channel[i].member, fp);
-        EXPAND_CHANNEL
-#undef X
-    }
- 
-    fread(m_noise.reg, sizeof(m_noise.reg), 1, fp);
-#define X(type, member) READ_##type(m_noise.member, fp);
-    EXPAND_NOISE
-#undef X
-    fread(m_dma.reg, sizeof(m_dma.reg), 1, fp);
-#define X(type, member) READ_##type(m_dma.member, fp);
-    EXPAND_DMA
-#undef X
-}
 
 uint32 sound_save_state_buf_size(void)
 {

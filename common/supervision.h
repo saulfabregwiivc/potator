@@ -77,7 +77,6 @@ void supervision_done(void);
  * \return TRUE - success, FALSE - error
  */
 BOOL supervision_load(const uint8 *rom, uint32 romSize);
-void supervision_exec(uint16 *backbuffer, BOOL skipFrame);
 void supervision_exec_ex(uint16 *backbuffer, int16 backbufferWidth, BOOL skipFrame);
 
 /*!
@@ -98,22 +97,6 @@ void supervision_set_color_scheme(int colorScheme);
  * \param frameCount in range [0, SV_GHOSTING_MAX]. 0 - disable.
  */
 void supervision_set_ghosting(int frameCount);
-/*!
- * Generate U8 (0 - 45), 2 channels.
- * \param len in bytes.
- */
-void supervision_update_sound(uint8 *stream, uint32 len);
-
-/*!
- * Save state to '{statePath}{id}.svst' if id >= 0, otherwise '{statePath}'.
- * \return TRUE - success, FALSE - error
- */
-BOOL supervision_save_state(const char *statePath, int8 id);
-/*!
- * Load state from '{statePath}{id}.svst' if id >= 0, otherwise '{statePath}'.
- * \return TRUE - success, FALSE - error
- */
-BOOL supervision_load_state(const char *statePath, int8 id);
 
 uint32 supervision_save_state_buf_size(void);
 BOOL supervision_save_state_buf(uint8 *data, uint32 size);

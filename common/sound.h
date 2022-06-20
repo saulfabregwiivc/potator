@@ -3,8 +3,6 @@
 
 #include "types.h"
 
-#include <stdio.h>
-
 void sound_reset(void);
 /*!
  * Generate U8 (0 - 45), 2 channels.
@@ -15,9 +13,6 @@ void sound_decrement(void);
 void sound_wave_write(int which, int offset, uint8 data);
 void sound_dma_write(int offset, uint8 data);
 void sound_noise_write(int offset, uint8 data);
-
-void sound_save_state(FILE *fp);
-void sound_load_state(FILE *fp);
 
 uint32 sound_save_state_buf_size(void);
 void sound_save_state_buf(uint8 *data);

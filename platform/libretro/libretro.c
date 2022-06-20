@@ -270,7 +270,7 @@ static void update_audio(void)
    int16_t *out_ptr   = audio_out_buffer;
    size_t i;
 
-   supervision_update_sound(audio_samples_buffer, AUDIO_BUFFER_SIZE);
+   sound_stream_update(audio_samples_buffer, AUDIO_BUFFER_SIZE);
 
    /* Convert from U8 (0 - 45) to S16 */
    for (i = 0; i < AUDIO_BUFFER_SIZE; i++)
@@ -604,7 +604,6 @@ void retro_run(void)
             skip_frame = (retro_audio_buff_occupancy < frameskip_threshold) ? TRUE : FALSE;
             break;
          default:
-            skip_frame = 0;
             break;
       }
 
@@ -627,7 +626,7 @@ void retro_run(void)
    }
 
    /* Run emulator */
-   supervision_exec(video_buffer, skip_frame);
+   supervision_exec_ex(video_buffer, SV_W, skip_frame);
 
    /* Output video */
    video_cb((bool)skip_frame ? NULL : video_buffer,

@@ -100,12 +100,10 @@ uint8 memorymap_registers_read(uint32 Addr)
             break;
         case 0x27:
             data &= ~3;
-            if (timer_shot) {
+            if (timer_shot)
                 data |= 1;
-            }
-            if (dma_finished) {
+            if (dma_finished)
                 data |= 2;
-            }
             break;
     }
     return data;
@@ -160,12 +158,10 @@ static void dma_write(uint32 Addr, uint8 Value)
 static void update_lowerRomBank(void)
 {
     uint32 bankOffset = 0;
-    if (isMAGNUM) {
+    if (isMAGNUM)
         bankOffset = (((regs[BANK] & 0x20) << 9) | ((regs[0x21] & 0xf) << 15));
-    }
-    else {
+    else
         bankOffset =  ((regs[BANK] & 0xe0) << 9);
-    }
     lowerRomBank = programRom + bankOffset % programRomSize;
 }
 
@@ -260,41 +256,12 @@ byte Rd6502(register word Addr)
 
 BOOL memorymap_load(const uint8 *rom, uint32 size)
 {
-    if ((size & 0x3fff) || size == 0 || rom == NULL) {
+    if ((size & 0x3fff) || size == 0 || rom == NULL)
         return FALSE;
-    }
     programRomSize = size;
     programRom = rom;
     isMAGNUM = size > 131072;
     return TRUE;
-}
-
-void memorymap_save_state(FILE *fp)
-{
-    uint8 ibank = 0;
-    fwrite(regs,     0x2000, 1, fp);
-    fwrite(lowerRam, 0x2000, 1, fp);
-    fwrite(upperRam, 0x2000, 1, fp);
-
-    ibank = (uint8)((lowerRomBank - programRom) / 0x4000);
-    WRITE_uint8(ibank, fp);
-
-    WRITE_BOOL(dma_finished, fp);
-    WRITE_BOOL(timer_shot,   fp);
-}
-
-void memorymap_load_state(FILE *fp)
-{
-    uint8 ibank = 0;
-    fread(regs,     0x2000, 1, fp);
-    fread(lowerRam, 0x2000, 1, fp);
-    fread(upperRam, 0x2000, 1, fp);
-
-    READ_uint8(ibank, fp);
-    lowerRomBank = programRom + ibank * 0x4000;
-
-    READ_BOOL(dma_finished, fp);
-    READ_BOOL(timer_shot,   fp);
 }
 
 uint32 memorymap_save_state_buf_size(void)

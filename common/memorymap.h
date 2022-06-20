@@ -3,11 +3,8 @@
 
 #include "types.h"
 
-#include <stdio.h>
-
 enum {
-      XSIZE = 0x00 /*
-    , YSIZE = 0x01  */
+      XSIZE = 0x00
     , XPOS  = 0x02
     , YPOS  = 0x03
     , BANK  = 0x26
@@ -22,9 +19,6 @@ void memorymap_done(void);
 uint8 memorymap_registers_read(uint32 Addr);
 void memorymap_registers_write(uint32 Addr, uint8 Value);
 BOOL memorymap_load(const uint8 *rom, uint32 size);
-
-void memorymap_save_state(FILE *fp);
-void memorymap_load_state(FILE *fp);
 
 uint32 memorymap_save_state_buf_size(void);
 void memorymap_save_state_buf(uint8 *data);
